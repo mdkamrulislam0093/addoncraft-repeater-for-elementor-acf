@@ -1,0 +1,40 @@
+.elementor-template-library-template-custom {
+    border: 2px solid #007cba !important;
+}
+
+.elementor-template-library-template-badge-custom {
+    background: #007cba !important;
+    color: #fff !important;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+    border-radius: 3px !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 1 !important;
+}
+
+.elementor-editor-custom-template .elementor-panel-navigation .elementor-panel-navigation-tab {
+    border-bottom: 2px solid #007cba;
+}
+
+.custom-template-settings {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.elementor-element .icon .REPEFOEL-icon:before {
+    content: '';
+    background-image: url('/wp-content/plugins/addoncraft-repeater-for-elementor-acf/assets/icons/repefoel-icon.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 45px;
+    height: 40px;
+    display: block;
+    margin: auto;
+} 
+
