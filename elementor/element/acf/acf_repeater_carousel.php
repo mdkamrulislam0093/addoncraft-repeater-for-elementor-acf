@@ -638,8 +638,9 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
                 'type' => \Elementor\Controls_Manager::SLIDER,
                 'devices' => [ 'desktop', 'tablet', 'mobile' ],
                 'selectors' => [
-                    '{{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-prev' => 'width: {{SIZE}}px; height: {{SIZE}}px; font-size: calc({{SIZE}}px / 2.5);',
-                    '{{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-next' => 'width: {{SIZE}}px; height: {{SIZE}}px; font-size: calc({{SIZE}}px / 2.5);',
+                    '{{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-prev' => 'width: {{SIZE}}px; height: {{SIZE}}px; font-size: calc({{SIZE}}px / 1.5);',
+                    '{{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-next' => 'width: {{SIZE}}px; height: {{SIZE}}px; font-size: calc({{SIZE}}px / 1.5);',
+                    '{{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-next:after, {{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-prev:after' => 'font-size: calc({{SIZE}}px / 1.5);',
                 ],
             ]
         );
@@ -1016,7 +1017,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
             $nav_right_classes = array_filter($nav_right_pos);
 
         ?> 
-            <div class="swiper-button-prev <?php echo esc_attr( implode(' ', $nav_left_classes) ); ?>" style="color: red; transform: translate(<?php echo $nav_left_pos_x_offset_size . $nav_left_pos_x_offset_unit; ?>, <?php echo $nav_left_pos_y_offset_size . $nav_left_pos_y_offset_unit; ?>);"></div>
+            <div class="swiper-button-prev <?php echo esc_attr( implode(' ', $nav_left_classes) ); ?>" style=" transform: translate(<?php echo $nav_left_pos_x_offset_size . $nav_left_pos_x_offset_unit; ?>, <?php echo $nav_left_pos_y_offset_size . $nav_left_pos_y_offset_unit; ?>);"></div>
 
             <div class="swiper-button-next <?php echo esc_attr( implode(' ', $nav_right_classes) ); ?>" style="transform: translate(<?php echo esc_attr( $nav_right_pos_x_offset_size . $nav_right_pos_x_offset_unit ); ?>, <?php echo esc_attr( $nav_right_pos_y_offset_size . $nav_right_pos_y_offset_unit ); ?>);"></div>
 
