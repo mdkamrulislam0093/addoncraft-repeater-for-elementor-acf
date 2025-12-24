@@ -64,11 +64,9 @@ class REPEFOEL_ELEMENTOR_ADDON {
 	            define('REPEFOEL_USING_ACF_PRO', true);
 	            $this->repefoel_acf_pro_include();
 	            $this->repefoel_acf_free_include();
-            	error_log('acf_is_pro');
 	        } else {
 	            define('REPEFOEL_USING_ACF_PRO', false);
 	            $this->repefoel_acf_free_include();
-            	error_log('acf_free');
 	        }
 
 	    }

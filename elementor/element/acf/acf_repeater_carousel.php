@@ -27,7 +27,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
      * @return array Style dependencies
      */        
     public function get_style_depends() {
-        return [ 'swiper' ];
+        return [ 'swiper', 'repefoel-rp-style' ];
     }
 
     /**
@@ -105,9 +105,6 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
         return $all_repeater_fields;
     }
 
-    public function get_style_depends() {
-        return ['repefoel-rp-style'];
-    }
 
     /**
      * Register controls
@@ -327,8 +324,38 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
 
         $this->end_controls_section();
 
+        $this->register_layout_style_controls();
         $this->register_navigation_style_controls();
         $this->register_pagination_style_controls();
+    }
+
+    /**
+     * Register Content style controls
+     */
+    public function register_layout_style_controls() {
+
+        $this->start_controls_section(
+            'acf_repeater__content_style',
+            [
+                'label' => esc_html__('Inner Layout', 'addoncraft-for-elementor'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+
+        $this->add_responsive_control(
+            'acf_repeater_container_padding',
+            [
+                'label' => esc_html__( 'Padding', 'addoncraft-for-elementor' ),
+                'type' => \Elementor\Controls_Manager::DIMENSIONS,
+                'size_units' => [ 'px', '%', 'em', 'rem', 'custom' ],
+                'selectors' => [
+                    '{{WRAPPER}} .repefoel_acf_repeater_rs_sliders' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
     }
 
 
@@ -869,33 +896,314 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
 
         // $allowed_tags = wp_kses_allowed_html( 'post' );
         // $allowed_tags['style'] = [];
+        
+        $slider_id = 'repefoel-sliders-' . $this->get_id();
+        $data_attrs = $this->get_slider_data_attributes($settings);
+        $addition_options = $this->additional_options_slider($settings);
+        $slider_settings = $this->get_slider_settings($settings, $slider_id);
 
         ob_start();
         ?>
 
-        <div class="repefoel_loop_repeater_main">
-            <div class="repefoel-rp-row">
-                <?php
-                    foreach ($repeater_val as $repeat) :
-                        if ( is_array( $repeat ) ) :
-                ?>
+        <div class="repefoel_loop_repeater_main" id="<?php echo esc_attr($slider_id); ?>">
 
-                <div class="repefoel-rp-item">
-                    <div class="repefoel-rp-inner">
-                        <?php 
-                            echo wp_kses( $this->parse_template_content($template_content, $repeat), $this->allow_all_html_tags() );
-                        ?>
+                <div class="repefoel_sliders-wrapper" data-nav="<?php echo esc_attr( $settings['repeater_slider_navigation'] ); ?>">
+                    <div class="repefoel_acf_repeater_rs_sliders swiper" <?php echo wp_kses_post($data_attrs); ?> data-swiper_settings='<?php echo json_encode( $slider_settings, JSON_HEX_APOS | JSON_HEX_QUOT ); ?>'>
+                        <div class="swiper-wrapper">
+                            <?php
+                                foreach ($repeater_val as $repeat) :
+                                    if ( is_array( $repeat ) ) :
+                            ?>
+                                <div class="swiper-slide">
+                                    <div class="repefoel-slide-wrap">
+
+                                    <?php 
+                                        echo wp_kses( $this->parse_template_content($template_content, $repeat), $this->allow_all_html_tags() );
+                                    ?>
+                                    </div>                
+                                </div>
+                            <?php 
+                                endif;
+                            endforeach; ?>
+                        </div>
+                    </div>
+                    <div class="acf_repeater_rs_swiper_product_sliders-nav">
+                        <?php $this->render_slider_controls($addition_options); ?>                    
                     </div>
                 </div>
-                <?php 
-                    endif;
-                endforeach; ?>
-            </div>
+
         </div>
         <?php 
+        $this->render_slider_script(); 
 
 
-        echo wp_kses(ob_get_clean(), $this->allow_all_html_tags());
+        echo ob_get_clean();
+    }
+
+    /**
+     * Addtional options For Slider
+     */
+    private function additional_options_slider ($settings) {
+        return [
+
+            'show_navigation' => $settings['repeater_slider_navigation'],
+            'navigation_left_x_position' => $settings['acf_repeater_rs_navigation_left_x_position'],
+            'navigation_left_y_position' => $settings['acf_repeater_rs_navigation_left_y_position'],
+            'navigation_left_x_offset' => $settings['acf_repeater_rs_navigaiton_left_x_position_offset'],
+            'navigation_left_y_offset' => $settings['acf_repeater_rs_navigaiton_left_y_position_offset'],
+            'navigation_right_x_position' => $settings['acf_repeater_rs_navigation_right_x_position'],
+            'navigation_right_y_position' => $settings['acf_repeater_rs_navigation_right_y_position'],
+            'navigation_right_x_offset' => $settings['acf_repeater_rs_navigaiton_right_x_position_offset'],
+            'navigation_right_y_offset' => $settings['acf_repeater_rs_navigaiton_right_y_position_offset'],
+
+        ];
+    }
+
+    private function render_slider_script() {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function($){
+                if (typeof Swiper === 'undefined') {
+                    console.log('Swiper library not loaded');
+                    return;
+                }
+
+                let current_slider = $("#repefoel-sliders-<?php echo esc_js($this->get_id()); ?>").find('.swiper');
+
+                if ( current_slider.length ) {
+                    try {
+                      const opts = JSON.parse(current_slider.attr('data-swiper_settings') || '{}');
+                      console.log(opts);
+                      new Swiper('#repefoel-sliders-<?php echo esc_js($this->get_id()); ?> .swiper', opts);
+                    } catch (e) {
+                      console.error('Invalid data-swiper JSON', e);
+                    }
+                }
+
+            });
+
+
+        </script>
+
+        <?php 
+    }
+
+    /**
+     * Render slider controls
+     */
+    private function render_slider_controls($addition_options) {
+
+         $show_navigation = isset($addition_options['show_navigation']) ? $addition_options['show_navigation'] : '';
+
+
+        if ( in_array($show_navigation, ['arrows', 'both']) ):
+
+            $nav_left_pos = [ $addition_options['navigation_left_x_position'], $addition_options['navigation_left_y_position'] ];
+
+            $nav_right_pos = [ $addition_options['navigation_right_x_position'], $addition_options['navigation_right_y_position'] ];
+
+            $nav_left_pos_x_offset_size = $addition_options['navigation_left_x_offset']['size'] ?? 0;
+            $nav_left_pos_x_offset_unit = $addition_options['navigation_left_x_offset']['unit'] ?? 'px';
+            $nav_left_pos_y_offset_size = $addition_options['navigation_left_y_offset']['size'] ?? 0;
+            $nav_left_pos_y_offset_unit = $addition_options['navigation_left_y_offset']['unit'] ?? 'px';
+            
+            $nav_right_pos_x_offset_size = $addition_options['navigation_right_x_offset']['size'] ?? 0;
+            $nav_right_pos_x_offset_unit = $addition_options['navigation_right_x_offset']['unit'] ?? 'px';
+            $nav_right_pos_y_offset_size = $addition_options['navigation_right_y_offset']['size'] ?? 0;
+            $nav_right_pos_y_offset_unit = $addition_options['navigation_right_y_offset']['unit'] ?? 'px';
+
+            $nav_left_classes = array_filter($nav_left_pos);
+            $nav_right_classes = array_filter($nav_right_pos);
+
+        ?> 
+            <div class="swiper-button-prev <?php echo esc_attr( implode(' ', $nav_left_classes) ); ?>" style="color: red; transform: translate(<?php echo $nav_left_pos_x_offset_size . $nav_left_pos_x_offset_unit; ?>, <?php echo $nav_left_pos_y_offset_size . $nav_left_pos_y_offset_unit; ?>);"></div>
+
+            <div class="swiper-button-next <?php echo esc_attr( implode(' ', $nav_right_classes) ); ?>" style="transform: translate(<?php echo esc_attr( $nav_right_pos_x_offset_size . $nav_right_pos_x_offset_unit ); ?>, <?php echo esc_attr( $nav_right_pos_y_offset_size . $nav_right_pos_y_offset_unit ); ?>);"></div>
+
+        <?php endif;
+        
+        if ( in_array($addition_options['show_navigation'], ['dots', 'both']) ): ?>
+            <div class="swiper-pagination"></div>
+        <?php endif;
+    }    
+
+    /**
+     * Get sanitized slider settings for Swiper configuration
+     *
+     * @param array $settings Raw settings array from user input
+     * @return array Sanitized settings array for Swiper initialization
+     * @since 1.0.0
+     */
+
+    private function get_slider_settings($settings, $slider_id){
+
+        // Validate input parameter
+        if ( ! is_array( $settings ) ) {
+            $settings = array();
+        }
+
+        // Slider Slider Responsive
+        $default_slide = 1;
+        $tablet_slide = 2;
+        $desktop_slide = 3;
+
+        if ( !empty($settings['repeater_slider_slides_to_show']) ) {
+            $desktop_slide = $settings['repeater_slider_slides_to_show'];
+            $default_slide = $settings['repeater_slider_slides_to_show'];
+        }
+
+        if ( !empty($settings['repeater_slider_slides_to_show_tablet']) ) {
+            $tablet_slide = $settings['repeater_slider_slides_to_show_tablet'];
+            $default_slide = $settings['repeater_slider_slides_to_show_tablet'];
+        }
+
+        if ( !empty($settings['repeater_slider_slides_to_show_mobile']) ) {
+            $default_slide = $settings['repeater_slider_slides_to_show_mobile'];
+        } 
+
+
+        // Slider Slider Responsive
+        $default_space = 10;
+        $tablet_space = 20;
+        $desktop_space = 30;
+
+        if ( !empty($settings['repeater_slider_slider_space_between']) ) {
+            $desktop_space = $settings['repeater_slider_slider_space_between']['size'];
+            $default_space = $settings['repeater_slider_slider_space_between']['size'];
+        }
+
+        if ( !empty($settings['repeater_slider_slider_space_between_tablet']) ) {
+            $tablet_space = $settings['repeater_slider_slider_space_between_tablet']['size'];
+            $default_space = $settings['repeater_slider_slider_space_between_tablet']['size'];
+        }
+
+        if ( !empty($settings['repeater_slider_slider_space_between_mobile']) ) {
+            $default_space = $settings['repeater_slider_slider_space_between_mobile']['size'];
+        } 
+
+
+
+        // Default settings with proper sanitization
+        $settings_arr = array(
+            'slidesPerView' => $this->sanitize_slides_per_view( $default_slide ?? 3 ),
+            'spaceBetween'  => absint( $default_space ?? 30 ),
+            'loop'          => $settings['repeater_slider_infinite_loop'] ?? false,
+            'autoHeight'    => false,
+            'keyboard'      => array(
+                'enabled'        => true,
+                'onlyInViewport' => true,
+            ),
+            'breakpoints'   => array(
+                '768' => array(
+                    'slidesPerView' => absint( $tablet_slide ),
+                    'spaceBetween' => absint( $tablet_space ),
+                ),
+                '1024' => array(
+                    'slidesPerView' => absint( $desktop_slide ),
+                    'spaceBetween' => absint( $desktop_space ),
+                ),
+            )
+        );
+
+
+        // Handle autoplay settings
+        if ( $settings['repeater_slider_autoplay'] ?? false ) {
+            $settings_arr['autoplay'] = array(
+                'delay'                => $this->sanitize_autoplay_delay( $settings['repeater_slider_autoplay_speed'] ?? 2500 ),
+                'disableOnInteraction' => $settings['repeater_slider_pause_on_interaction'] ?? false,
+                'pauseOnMouseEnter'    => $settings['repeater_slider_pause_on_hover'] ?? false,
+            );
+        }
+
+        // Handle navigation settings
+        $navigation_type = sanitize_text_field( $settings['repeater_slider_navigation'] ?? 'none' );
+        $this->configure_navigation( $settings_arr, $navigation_type, $slider_id );
+
+        return apply_filters( 'repeater_slider_settings', $settings_arr, $settings, $this->get_id() );
+    }
+
+    /**
+    * Sanitize slides per view value
+    */
+    private function sanitize_slides_per_view( $value ) {
+        if ( 'auto' === $value ) {
+            return 'auto';
+        }
+        
+        $int_value = absint( $value );
+        return max( 1, min( 10, $int_value ) ); // Limit between 1-10 slides
+    }
+
+
+    /**
+    * Sanitize autoplay delay value
+    */
+    private function sanitize_autoplay_delay( $value ) {
+        $delay = absint( $value );
+        return max( 500, min( 10000, $delay ) ); // Limit between 0.5-10 seconds
+    }
+
+    
+    /**
+    * 
+    * Configure navigation based on type
+    */
+
+    private function configure_navigation( &$settings_arr, $navigation_type, $slider_id ) {
+
+        if ( empty($slider_id) ) {
+            return;
+        }
+
+        switch ( $navigation_type ) {
+            case 'both':
+                $settings_arr['navigation'] = array(
+                    'nextEl' => sprintf('#%s .swiper-button-next', $slider_id),
+                    'prevEl' => sprintf('#%s .swiper-button-prev', $slider_id),
+                );
+                $settings_arr['pagination'] = array(
+                    'el'        => sprintf('#%s .swiper-pagination', $slider_id),
+                    'clickable' => true,
+                );
+                break;
+
+            case 'arrows':
+                $settings_arr['navigation'] = array(
+                    'nextEl' => sprintf('#%s .swiper-button-next', $slider_id),
+                    'prevEl' => sprintf('#%s .swiper-button-prev', $slider_id),
+                );
+                break;
+
+            case 'dots':
+                $settings_arr['pagination'] = array(
+                    'el'        => sprintf('#%s .swiper-pagination', $slider_id),
+                    'clickable' => true,
+                );
+                break;
+
+            case 'none':
+            default:
+                // Remove navigation and pagination if set to none or invalid value
+                unset( $settings_arr['navigation'], $settings_arr['pagination'] );
+                break;
+        }
+    }
+
+    /**
+     * Get slider data attributes
+     */
+    private function get_slider_data_attributes($display_options) {
+
+        $attributes = [
+            'data-navigation' => esc_attr( in_array($display_options['repeater_slider_navigation'], ['arrows', 'both']) ? 'yes' : '0'),
+            'data-pagination' => esc_attr( $display_options['repeater_slider_navigation'] == 'dots' ? 'yes' : '0' ),
+            'data-pagination' => esc_attr( $display_options['repeater_slider_navigation'] == 'dots' ? 'yes' : '0' ),
+            // 'data-image-direction' => esc_attr($display_options['box_image_position'])
+        ];
+        
+        return implode(' ', array_map(function($key, $value) {
+            return sprintf('%s="%s"', $key, $value );
+        }, array_keys($attributes), $attributes));
     }
 
   protected function parse_template_content($template, $repeat) {

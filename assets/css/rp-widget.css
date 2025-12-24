@@ -1,3 +1,31 @@
 .repefoel-rp-row {
   display: grid;
 }
+
+
+.repefoel_sliders-wrapper .swiper-button-prev.atc_ss_x_left,
+.repefoel_sliders-wrapper .swiper-button-next.atc_ss_x_left {
+    left: 0;
+}
+
+.repefoel_sliders-wrapper .swiper-button-prev.atc_ss_y_center,
+.repefoel_sliders-wrapper .swiper-button-next.atc_ss_y_center {
+    top: 48%;
+}
+
+.repefoel_sliders-wrapper .swiper-button-prev.atc_ss_x_right,
+.repefoel_sliders-wrapper .swiper-button-next.atc_ss_x_right {
+    right: 0;
+    left: unset;
+}
+
+.repefoel_sliders-wrapper .swiper-button-prev.atc_ss_y_top,
+.repefoel_sliders-wrapper .swiper-button-next.atc_ss_y_top {
+    top: 0;
+}
+
+.repefoel_sliders-wrapper .swiper-button-prev.atc_ss_y_bottom,
+.repefoel_sliders-wrapper .swiper-button-next.atc_ss_y_bottom {
+    top: unset;
+    bottom: 0;
+}
