@@ -4,7 +4,7 @@ Donate link: https://addonscraft.com
 Tags: acf, elementor, repeater, loop, custom fields
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.0
+Stable tag: 1.2
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -120,6 +120,12 @@ Yes. Content is rendered dynamically but remains fully crawlable by search engin
 
 == Changelog ==
 
+= 1.2.0 =
+* New Slider Widget Added
+* ACF Repeater integration with Elementor
+* Performance optimizations
+
+
 = 1.0.0 =
 * Initial release
 * ACF Repeater integration with Elementor
@@ -128,5 +134,6 @@ Yes. Content is rendered dynamically but remains fully crawlable by search engin
 
 == Upgrade Notice ==
 
-= 1.0.0 =
-Initial release of Addoncraft Repeater for Elementor ACF.
+= 1.2.0 =
+* New Slider Widget Added
+

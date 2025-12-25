@@ -121,7 +121,7 @@
                 if ('widget' === currentElementType) {
                     currentElementType = model.get('widgetType');
 
-                    if ( 'REPEFOEL_widget_repeater' == currentElementType ) {
+                    if ( 'REPEFOEL_widget_repeater' == currentElementType || 'REPEFOEL_widget_repeater_carousel' == currentElementType ) {
                         setTimeout(function () {
 
                             var sourceControl = editor.$el.find('[data-setting="repefoel_template_select"]');

@@ -337,7 +337,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
         $this->start_controls_section(
             'acf_repeater__content_style',
             [
-                'label' => esc_html__('Inner Layout', 'addoncraft-for-elementor'),
+                'label' => esc_html__('Inner Layout', 'addoncraft-repeater-for-elementor-acf'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -346,7 +346,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends \Elementor\Widget_Base {
         $this->add_responsive_control(
             'acf_repeater_container_padding',
             [
-                'label' => esc_html__( 'Padding', 'addoncraft-for-elementor' ),
+                'label' => esc_html__( 'Padding', 'addoncraft-repeater-for-elementor-acf' ),
                 'type' => \Elementor\Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', '%', 'em', 'rem', 'custom' ],
                 'selectors' => [

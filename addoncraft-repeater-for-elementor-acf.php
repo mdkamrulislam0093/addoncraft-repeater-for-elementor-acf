@@ -4,7 +4,7 @@
  * Description: Addoncraft Repeater for Elementor ACF is a plugin you install after Elementor! It’s packed with a variety of stunning elements and different types of widgets to enhance your website design.
  * Plugin URI: https://wordpress.org/plugins/addoncraft-repeater-for-elementor-acf
  * Author: addoncraft
- * Version: 1.1
+ * Version: 1.2
  * Requires Plugins: elementor
  * Author URI: https://addonscraft.com/
  * License: GPLv3
@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
 
 define( 'REPEFOEL__PLUGIN_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'REPEFOEL__PLUGIN_URL', trailingslashit( plugins_url( '/', __FILE__ ) ) );
-define( 'REPEFOEL__PLUGIN_VERSION', '1.0.0');
+define( 'REPEFOEL__PLUGIN_VERSION', '1.1.0');
 
 class REPEFOEL_ELEMENTOR_ADDON {
 
@@ -39,20 +39,17 @@ class REPEFOEL_ELEMENTOR_ADDON {
 
 		if (!did_action('elementor/loaded')) {
             add_action('admin_notices', [$this, 'repefoel_admin_notice_missing_main_plugin']);
-            error_log('not elementor loaded');
             return;
         }
 
 		if ( ! class_exists( 'ACF' ) ) {
             add_action('admin_notices', [$this, 'repefoel_admin_notice_missing_acf_pro_plugin']);
-            error_log('not ACF loaded');
             return;
 		}        
 
         // Check for minimum Elementor version
         if (!version_compare(ELEMENTOR_VERSION, '3.0.0', '>=')) {
             add_action('admin_notices', [$this, 'repefoel_admin_notice_minimum_elementor_version']);
-            error_log('not Version issue');
             return;
         }
 
