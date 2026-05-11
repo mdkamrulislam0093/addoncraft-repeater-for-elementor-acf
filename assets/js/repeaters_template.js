@@ -188,6 +188,39 @@
             });
         }
 
+        // ── Auto-restore back nav on direct URL load (page reload with active-document param) ─
+        (function() {
+            var urlParams    = new URLSearchParams(window.location.search);
+            var urlPostId    = parseInt(urlParams.get('post'), 10);
+            var urlActiveDoc = parseInt(urlParams.get('active-document'), 10);
+
+            if (!urlActiveDoc || !urlPostId || urlActiveDoc === urlPostId) {
+                return;
+            }
+
+            var attempts = 0;
+            var check = setInterval(function() {
+                if (++attempts > 150) {
+                    clearInterval(check);
+                    return;
+                }
+
+                if ($('#repefoel-back-nav').length) {
+                    clearInterval(check);
+                    return;
+                }
+
+                if (!$('#elementor-preview').length) {
+                    return;
+                }
+
+                clearInterval(check);
+                var doc   = (elementor.documents && elementor.documents.get(urlActiveDoc)) || null;
+                var title = doc ? doc.get('title') : '';
+                repefoel_show_back_nav(urlPostId, title);
+            }, 200);
+        })();
+
         // ─────────────────────────────────────────────────────────────────
 
         elementor.channels.editor.on('section:activated', (secionName, editor) => {
