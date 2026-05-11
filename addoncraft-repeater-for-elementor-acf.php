@@ -210,7 +210,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 				'successMessage'  => esc_html__('Custom template saved successfully!', 'addoncraft-repeater-for-elementor-acf'),
 				'backLabel'       => esc_html__('Back', 'addoncraft-repeater-for-elementor-acf'),
 				'editingTemplate' => esc_html__('Loop Item', 'addoncraft-repeater-for-elementor-acf'),
-				'publishLabel'    => esc_html__('Publish', 'addoncraft-repeater-for-elementor-acf'),
+				'publishLabel'    => esc_html__('Save', 'addoncraft-repeater-for-elementor-acf'),
 			]
 		);
 
