@@ -1,36 +1,45 @@
 === Addoncraft Repeater For Elementor ACF ===
 Contributors: addoncraft
 Donate link: https://addonscraft.com
-Tags: acf, elementor, repeater, loop, custom fields
+Tags: acf, elementor, repeater, loop, acf repeater elementor
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.2
+Stable tag: 1.6
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 **Addoncraft Repeater for Elementor ACF** lets you display **ACF Repeater** fields in Elementor—design once, it auto-repeats dynamically
 
+
 == Description ==
 
-**Addoncraft Repeater for Elementor ACF** allows you to easily display **Advanced Custom Fields (ACF) Repeater fields inside Elementor** with full design freedom.
+**Addoncraft Repeater for Elementor ACF** allows you to easily display **Advanced Custom Fields (ACF) Repeater fields inside Elementor**, including a dedicated Slider widget for carousel-style layouts.
 
-Design your layout **once in Elementor**, connect it to your **ACF Repeater field**, and the plugin will automatically loop and render all repeater items dynamically—**no PHP, no shortcodes, no custom queries**.
+Design your layout **once in Elementor**, connect it to your **ACF Repeater field**, and the plugin will automatically loop and render all repeater items—as a normal layout or slider—fully dynamically.
 
-Perfect for developers, designers, agencies, and site owners who want **dynamic Elementor content powered by ACF Repeater fields**.
+**No PHP.
+No shortcodes.
+No custom queries.**
+
+Perfect for developers, designers, agencies, and site owners who want **dynamic Elementor content and sliders powered by ACF Repeater fields**.
+
 
 ---
 
 ### 🔥 Key Features
 
 * Full support for **ACF Repeater fields**
+* Repeater Widget for grid/list layouts
+* NEW: Slider Widget powered by ACF Repeater
 * Seamless integration with **Elementor**
 * **No coding required** – visual design only
-* Dynamic auto-repeating layouts
+* Design once, auto-repeat dynamically
 * Works with **ACF Free & Pro**
 * Compatible with **Elementor Free & Pro**
 * Lightweight and performance optimized
-* Responsive and SEO-friendly output
+* Responsive, touch-friendly sliders
+* SEO-friendly output
 
 ---
 
@@ -38,12 +47,13 @@ Perfect for developers, designers, agencies, and site owners who want **dynamic 
 
 Addoncraft Repeater for Elementor ACF is ideal for displaying:
 
-* Team member listings
-* Pricing tables
-* Testimonials
-* Services and feature grids
+* Team member sections (grid or slider)
+* Testimonials Grid and sliders
+* Pricing tables Grid and sliders
+* Services and feature grids and Slider
 * Product specifications
-* FAQs
+* FAQs Grid and sliders
+* Image & content carousels
 * Any repeating content managed with ACF Repeater
 
 ---
@@ -53,20 +63,22 @@ Addoncraft Repeater for Elementor ACF is ideal for displaying:
 1. Create an **ACF Repeater field**
 2. Add repeater rows (text, image, links, etc.)
 3. Open the page in **Elementor Editor**
-4. Choose the design template once in the Elementor settings to apply it site-wide.
-5. Connect it to your ACF Repeater
-6. Your content automatically repeats 🎉
+4. Drag the Repeater Widget or Slider Widget
+5. Select or create a Repeater Item Template
+6. Connect your ACF Repeater field
+7. Your content auto-repeats as a layout or slider 🎉
 
 ---
 
 ### 🧠 Why Choose Addoncraft Repeater?
 
-Many Elementor users struggle to display ACF Repeater data without writing custom PHP loops.
+Many Elementor users struggle to display ACF Repeater data as sliders or dynamic layouts without writing custom PHP loops.
 
 **Addoncraft Repeater solves this instantly** by giving you:
-* Visual control
-* Faster development
-* Cleaner workflows
+* Visual control inside Elementor
+* Dynamic repeater and slider support
+* Faster development workflow
+* Clean, reusable templates
 * Zero technical complexity
 
 ---
@@ -85,6 +97,23 @@ Many Elementor users struggle to display ACF Repeater data without writing custo
 If you use **Elementor + ACF Repeater**, this plugin is a must-have.
 
 Install **Addoncraft Repeater for Elementor ACF** and turn your repeater fields into powerful, dynamic layouts—effortlessly.
+
+== Screenshots ==
+1. Search for Repeater or Slider widget in the Elementor Editor and Select the Repeater Widget or Slider Widget.
+2. Choose or create a Repeater Item Template and Connect the widget to your ACF Repeater field.
+3. Customize grid Layout settings.
+4. Select ACF Repeater Source.
+5. Customize slider settings (autoplay, navigation, responsive).
+6. Customize slider Styles (Navigation, pagination etc).
+7. View the frontend output (grid, list, or slider layout).
+8. Sample #2
+9. Sample #3
+10. Sample #4
+11. Sample #5
+12. Sample #6
+13. Sample #7
+14. Sample #8
+15. Slider Sample #1
 
 == Installation ==
 
@@ -110,15 +139,16 @@ Yes. You can use multiple ACF Repeater fields on different pages.
 = Is this plugin SEO friendly? =
 Yes. Content is rendered dynamically but remains fully crawlable by search engines.
 
-== Screenshots ==
-1. In the **Elementor Editor**, search for **Repeater** and select the **Repeater** widget.
-2. Within the widget settings, select the **design template** once, then connect the **ACF Repeater field** to the widget.
-3. Choose the layout for the repeater item design. 
-4. If a design template is not already created, create a **Repeater Item Template** from the **Elementor Templates** page or directly from the **Elementor editor**.
-5. Add the repeater item content in the **Repeater Template editor**.
-3. View the **frontend output** of the dynamic repeater content (for example, a **Team Member section** created using an ACF Repeater).
+
 
 == Changelog ==
+= 1.4.0 =
+* Post Widget Enhancement: You can now repeat the post, page or any custom post type posts.
+
+
+= 1.3.0 =
+* Slider Widget Enhancement: Can Add Icon and Image for Navigation Arrows
+
 
 = 1.2.0 =
 * New Slider Widget Added
@@ -132,8 +162,8 @@ Yes. Content is rendered dynamically but remains fully crawlable by search engin
 * Dynamic auto-repeat rendering
 * Performance optimizations
 
+
 == Upgrade Notice ==
 
-= 1.2.0 =
-* New Slider Widget Added
-
+= 1.4.0 =
+* Post Widget Enhancement: You can now repeat the post, page or any custom post type posts.

@@ -121,8 +121,15 @@
                 if ('widget' === currentElementType) {
                     currentElementType = model.get('widgetType');
 
-                    if ( 'REPEFOEL_widget_repeater' == currentElementType || 'REPEFOEL_widget_repeater_carousel' == currentElementType ) {
+                    if ( 
+                            [
+                                'REPEFOEL_widget_repeater',
+                                'REPEFOEL_widget_repeater_carousel',
+                                'REPEFOEL_widget_post_repeater'
+                            ].includes(currentElementType)
+                        ) {
                         setTimeout(function () {
+
 
                             var sourceControl = editor.$el.find('[data-setting="repefoel_template_select"]');
                             var post_id = elementor.config.document.id;
