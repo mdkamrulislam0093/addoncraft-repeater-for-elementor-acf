@@ -8,7 +8,7 @@
 
     // Wait for Elementor to be fully loaded
     $(window).on('elementor:init', function() {
-        
+
         // Add custom template type to create new template dialog
         elementor.hooks.addFilter('elementor/template-library/create_new_dialog_types', function(types) {
             types.custom_template = {
@@ -45,7 +45,7 @@
             // Add custom template tab if it doesn't exist
             var $templatesModal = $('#elementor-template-library-modal');
             var $tabsWrapper = $templatesModal.find('.elementor-template-library-menu');
-            
+
             if (!$tabsWrapper.find('[data-template-type="custom_template"]').length) {
                 var customTab = `
                     <div class="elementor-template-library-menu-item" data-template-type="custom_template">
@@ -79,7 +79,7 @@
 
                 onRender: function() {
                     ItemView.prototype.onRender.call(this);
-                    
+
                     if (this.model.get('template_type') === 'custom_template') {
                         this.$el.find('.elementor-template-library-template-body')
                             .append('<div class="elementor-template-library-template-badge elementor-template-library-template-badge-custom">Custom</div>');
@@ -112,6 +112,65 @@
         });
 
 
+        // ── Inline template editing (same-tab, Elementor document switch) ─
+
+        var _repefoel_origin_doc_id = null;
+
+        function repefoel_show_back_nav( origin_doc_id, template_title ) {
+            $('#repefoel-back-nav').remove();
+
+            var $panel = $('#elementor-panel-inner');
+
+            var $nav = $(
+                '<div id="repefoel-back-nav">' +
+                    '<button id="repefoel-back-btn">' +
+                        '<i class="eicon-arrow-left" aria-hidden="true"></i>' +
+                        '<span>' + REPEFOELTemplateData.backLabel + '</span>' +
+                    '</button>' +
+                    '<span id="repefoel-editing-label">' +
+                        '<i class="eicon-loop" aria-hidden="true"></i>' +
+                        '<span>' + ( template_title || REPEFOELTemplateData.editingTemplate ) + '</span>' +
+                    '</span>' +
+                '</div>'
+            );
+
+            $panel.prepend( $nav );
+
+            $('#repefoel-back-btn').on('click', async function() {
+                var doc_id = origin_doc_id;
+                $('#repefoel-back-nav').remove();
+
+                try {
+                    await $e.run('editor/documents/switch', {
+                        id: parseInt( doc_id ),
+                        mode: 'autosave'
+                    });
+                } catch (err) {
+                    console.error('REPEFOEL: document switch back failed', err);
+                }
+
+                // Reload the parent page preview so template edits show up.
+                setTimeout(function() {
+                    try { elementor.reloadPreview(); } catch(e) {}
+                }, 300);
+            });
+        }
+
+        function repefoel_open_template_inline( template_id, template_title ) {
+            _repefoel_origin_doc_id = elementor.documents.getCurrent().id;
+
+            $e.run('editor/documents/switch', {
+                id: parseInt( template_id ),
+                mode: 'autosave'
+            }).then(function() {
+                repefoel_show_back_nav( _repefoel_origin_doc_id, template_title );
+            }).catch(function(err) {
+                console.error('REPEFOEL: document switch failed', err);
+            });
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+
         elementor.channels.editor.on('section:activated', (secionName, editor) => {
             // const sectionName = model?.getOption('name');
             if ( secionName == 'content_section' ) {
@@ -121,7 +180,7 @@
                 if ('widget' === currentElementType) {
                     currentElementType = model.get('widgetType');
 
-                    if ( 
+                    if (
                             [
                                 'REPEFOEL_widget_repeater',
                                 'REPEFOEL_widget_repeater_carousel',
@@ -163,19 +222,21 @@
 
                             editor.$el.find('button[data-action="edit"]').on('click', function(){
                                 var sourcetemplate_id = '';
+                                var sourcetemplate_title = '';
 
                                 if ( $(this).attr('data-template_id') ) {
                                     sourcetemplate_id = $(this).attr('data-template_id');
                                 } else {
-                                    var sourcetemplate = editor.$el.find('[data-setting="repefoel_template_select"]');
+                                    var $sourcetemplate = editor.$el.find('[data-setting="repefoel_template_select"]');
 
-                                    if ( sourcetemplate.length ) {
-                                        sourcetemplate_id = sourcetemplate.val();
+                                    if ( $sourcetemplate.length ) {
+                                        sourcetemplate_id    = $sourcetemplate.val();
+                                        sourcetemplate_title = $sourcetemplate.find('option:selected').text();
                                     }
                                 }
 
                                 if ( sourcetemplate_id != '' ) {
-                                    window.open("/wp-admin/post.php?post="+ sourcetemplate_id +"&action=elementor");
+                                    repefoel_open_template_inline( sourcetemplate_id, sourcetemplate_title );
                                 }
                             });
 
@@ -183,7 +244,7 @@
                                 e.preventDefault();
                                 var $this = $(this);
                                 var main_wrap = editor.$el;
-                                
+
                               jQuery.ajax({
                                   url: REPEFOELTemplateData.ajax_url,
                                   method: 'POST',
@@ -191,7 +252,7 @@
                                     'action' : 'repefoel_create_elementor_repeater_template',
                                   },
                                   success: function(response) {
-                                    
+
                                     if ( response['success'] ) {
                                         $this.hide();
                                         main_wrap.find('button[data-action="edit"]').attr('data-template_id', response.data.template_id);
@@ -205,7 +266,7 @@
 
                                         editor.$el.find('#elementor-controls').attr('data-template_id', response.data.template_id).attr('data-template_title', response.data.template_title);
 
-                                        window.open(response.data.edit_url, '_blank');
+                                        repefoel_open_template_inline( response.data.template_id, response.data.template_title );
                                     }
 
                                   }
@@ -215,7 +276,7 @@
                             if ( post_id != '' ) {
                                 const settings = editor.getOption('model').attributes.settings.attributes ?? '';
                                 const temporary_template_id = editor.$el.find('#elementor-controls').attr('data-template_id') ?? '';
-                                
+
                                 if ( settings['repefoel_template_select'] != '' && temporary_template_id == settings['repefoel_template_select'] ) {
                                     const temporary_template_title = editor.$el.find('#elementor-controls').attr('data-template_title') ?? '';
                                     editor.$el.find('[data-setting="repefoel_template_select"]').prepend($('<option>', {
@@ -233,7 +294,7 @@
                 }
             }
         });
-     
+
 
     });
 

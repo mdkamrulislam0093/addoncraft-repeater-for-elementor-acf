@@ -4,7 +4,7 @@
  * Description: Addoncraft Repeater for Elementor ACF is a plugin you install after Elementor! It’s packed with a variety of stunning elements and different types of widgets to enhance your website design.
  * Plugin URI: https://wordpress.org/plugins/addoncraft-repeater-for-elementor-acf
  * Author: addoncraft
- * Version: 1.6
+ * Version: 1.7
  * Requires Plugins: elementor
  * Author URI: https://addonscraft.com/
  * License: GPLv3
@@ -17,7 +17,7 @@ defined('ABSPATH') || exit;
 
 define('REPEFOEL__PLUGIN_PATH', trailingslashit(plugin_dir_path(__FILE__)));
 define('REPEFOEL__PLUGIN_URL', trailingslashit(plugins_url('/', __FILE__)));
-define('REPEFOEL__PLUGIN_VERSION', '1.6');
+define('REPEFOEL__PLUGIN_VERSION', '1.7');
 
 class REPEFOEL_ELEMENTOR_ADDON
 {
@@ -204,10 +204,12 @@ class REPEFOEL_ELEMENTOR_ADDON
 			'REPEFOEL-repeater-template',
 			'REPEFOELTemplateData',
 			[
-				'ajax_url' => admin_url('admin-ajax.php'),
-				'customTemplate' => esc_html__('Custom Template', 'addoncraft-repeater-for-elementor-acf'),
+				'ajax_url'        => admin_url('admin-ajax.php'),
+				'customTemplate'  => esc_html__('Custom Template', 'addoncraft-repeater-for-elementor-acf'),
 				'customTemplates' => esc_html__('Custom Templates', 'addoncraft-repeater-for-elementor-acf'),
-				'successMessage' => esc_html__('Custom template saved successfully!', 'addoncraft-repeater-for-elementor-acf'),
+				'successMessage'  => esc_html__('Custom template saved successfully!', 'addoncraft-repeater-for-elementor-acf'),
+				'backLabel'       => esc_html__('Back', 'addoncraft-repeater-for-elementor-acf'),
+				'editingTemplate' => esc_html__('Loop Item', 'addoncraft-repeater-for-elementor-acf'),
 			]
 		);
 
