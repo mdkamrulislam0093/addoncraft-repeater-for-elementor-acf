@@ -40,6 +40,38 @@
     line-height: 1;
 }
 
+#repefoel-publish-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #f0abfc;
+    border: 1px solid #f0abfc;
+    border-radius: 4px;
+    color: #000;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 14px;
+    transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+    letter-spacing: 0.04em;
+    margin-left: 5px;
+}
+
+#repefoel-publish-btn:hover {
+    background: #eb8efb;
+    border-color: #eb8efb;
+}
+
+#repefoel-publish-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#repefoel-publish-btn.repefoel-publish-done {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
 #repefoel-editing-label {
     display: inline-flex;
     align-items: center;

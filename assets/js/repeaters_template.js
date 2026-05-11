@@ -123,10 +123,13 @@
 
             var $nav = $(
                 '<div id="repefoel-back-nav">' +
-                    '<button id="repefoel-back-btn">' +
+                    '<div class="repefoel-back-wrap"><button id="repefoel-back-btn">' +
                         '<i class="eicon-arrow-left" aria-hidden="true"></i>' +
                         '<span>' + REPEFOELTemplateData.backLabel + '</span>' +
                     '</button>' +
+                    '<button id="repefoel-publish-btn">' +
+                        '<span>' + ( REPEFOELTemplateData.publishLabel || 'Publish Changes' ) + '</span>' +
+                    '</button></div>' +
                     '<span id="repefoel-editing-label">' +
                         '<i class="eicon-loop" aria-hidden="true"></i>' +
                         '<span>' + ( template_title || REPEFOELTemplateData.editingTemplate ) + '</span>' +
@@ -153,6 +156,22 @@
                 setTimeout(function() {
                     try { elementor.reloadPreview(); } catch(e) {}
                 }, 300);
+            });
+
+            $('#repefoel-publish-btn').on('click', async function() {
+                var $btn = $(this);
+                $btn.prop('disabled', true).addClass('repefoel-publishing');
+
+                try {
+                    await $e.run('document/save/publish');
+                    $btn.addClass('repefoel-publish-done');
+                    setTimeout(function() {
+                        $btn.prop('disabled', false).removeClass('repefoel-publishing repefoel-publish-done');
+                    }, 1500);
+                } catch (err) {
+                    console.error('REPEFOEL: publish failed', err);
+                    $btn.prop('disabled', false).removeClass('repefoel-publishing');
+                }
             });
         }
 
