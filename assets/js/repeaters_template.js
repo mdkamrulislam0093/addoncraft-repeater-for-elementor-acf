@@ -119,7 +119,7 @@
         function repefoel_show_back_nav( origin_doc_id, template_title ) {
             $('#repefoel-back-nav').remove();
 
-            var $panel = $('#elementor-panel-inner');
+            var $panel = $('#elementor-preview');
 
             var $nav = $(
                 '<div id="repefoel-back-nav">' +
