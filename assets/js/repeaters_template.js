@@ -294,6 +294,17 @@
 
                             editor.$el.find('button[data-action="add"]').on('click', function(e){
                                 e.preventDefault();
+
+                                var $repeaterField = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
+                                var repeaterFieldVal = $repeaterField.val();
+                                if ( !$repeaterField.length || !repeaterFieldVal || repeaterFieldVal === '' ) {
+                                    editor.$el.find('#repefoel-field-notice').remove();
+                                    var $notice = $('<div id="repefoel-field-notice" style="color:#d63638;font-size:11px;margin:6px 0 0;padding:6px 8px;background:#fce9e9;border:1px solid #f5c5c5;border-radius:3px;">Please select a <strong>Repeater Field</strong> before adding a template.</div>');
+                                    $repeaterField.closest('.elementor-control').after($notice);
+                                    setTimeout(function() { $notice.fadeOut(300, function(){ $(this).remove(); }); }, 3500);
+                                    return;
+                                }
+
                                 var $this = $(this);
                                 var main_wrap = editor.$el;
 

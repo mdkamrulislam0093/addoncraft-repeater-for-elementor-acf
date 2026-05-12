@@ -526,8 +526,20 @@ class REPEFOEL_ELEMENTOR_ADDON
 			wp_send_json_error('Failed to create template');
 		}
 
-		// Set initial Elementor data
-		update_post_meta($template_id, '_elementor_data', '[]');
+		// Set initial Elementor data with a default container widget
+		$container_id   = substr( md5( uniqid( '', true ) ), 0, 8 );
+		$elementor_data = wp_json_encode( [
+			[
+				'id'       => $container_id,
+				'elType'   => 'container',
+				'settings' => [
+					'content_width' => 'full',
+				],
+				'elements' => [],
+				'isInner'  => false,
+			],
+		] );
+		update_post_meta( $template_id, '_elementor_data', $elementor_data );
 		update_post_meta($template_id, '_elementor_page_settings', array());
 
 		$edit_url = add_query_arg(array(
