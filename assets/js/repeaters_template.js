@@ -188,6 +188,22 @@
             });
         }
 
+        function repefoel_apply_preview_settings_then_open( template_id, template_title, post_id, repeater_field ) {
+            jQuery.ajax({
+                url: REPEFOELTemplateData.ajax_url,
+                method: 'POST',
+                data: {
+                    action:         'repefoel_update_template_preview_settings',
+                    template_id:    template_id,
+                    post_id:        post_id,
+                    repeater_field: repeater_field,
+                },
+                complete: function() {
+                    repefoel_open_template_inline( template_id, template_title );
+                }
+            });
+        }
+
         // ── Auto-restore back nav on direct URL load (page reload with active-document param) ─
         (function() {
             var urlParams    = new URLSearchParams(window.location.search);
@@ -298,7 +314,12 @@
                                 }
 
                                 if ( sourcetemplate_id != '' ) {
-                                    repefoel_open_template_inline( sourcetemplate_id, sourcetemplate_title );
+                                    repefoel_apply_preview_settings_then_open(
+                                        sourcetemplate_id,
+                                        sourcetemplate_title,
+                                        elementor.config.document.id,
+                                        repeaterFieldVal
+                                    );
                                 }
                             });
 
@@ -317,12 +338,15 @@
 
                                 var $this = $(this);
                                 var main_wrap = editor.$el;
+                                var current_post_id = elementor.config.document.id;
 
                               jQuery.ajax({
                                   url: REPEFOELTemplateData.ajax_url,
                                   method: 'POST',
                                   data: {
-                                    'action' : 'repefoel_create_elementor_repeater_template',
+                                    'action'         : 'repefoel_create_elementor_repeater_template',
+                                    'post_id'        : current_post_id,
+                                    'repeater_field' : repeaterFieldVal,
                                   },
                                   success: function(response) {
 

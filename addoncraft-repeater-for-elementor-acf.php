@@ -94,6 +94,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 
 		add_action('elementor/editor/after_enqueue_scripts', [$this, 'repefoel_enqueue_editor_scripts']);
 		add_action('wp_ajax_repefoel_create_elementor_repeater_template', [$this, 'repefoel_create_elementor_repeater_template']);
+		add_action('wp_ajax_repefoel_update_template_preview_settings', [$this, 'repefoel_update_template_preview_settings']);
 
 		// Enqueue REPEFOEL template CSS inside the editor preview so widget styles appear correctly.
 		// Elementor only loads CSS for the document being edited; embedded templates need explicit loading.
@@ -205,6 +206,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 			'REPEFOELTemplateData',
 			[
 				'ajax_url'        => admin_url('admin-ajax.php'),
+				'nonce'           => wp_create_nonce('repefoel_nonce'),
 				'customTemplate'  => esc_html__('Custom Template', 'addoncraft-repeater-for-elementor-acf'),
 				'customTemplates' => esc_html__('Custom Templates', 'addoncraft-repeater-for-elementor-acf'),
 				'successMessage'  => esc_html__('Custom template saved successfully!', 'addoncraft-repeater-for-elementor-acf'),
@@ -540,7 +542,13 @@ class REPEFOEL_ELEMENTOR_ADDON
 			],
 		] );
 		update_post_meta( $template_id, '_elementor_data', $elementor_data );
-		update_post_meta($template_id, '_elementor_page_settings', array());
+
+		$initial_post_id       = absint( $_POST['post_id'] ?? 0 );
+		$initial_repeater_field = sanitize_text_field( $_POST['repeater_field'] ?? '' );
+		update_post_meta( $template_id, '_elementor_page_settings', [
+			'REPEFOEL_preview_post'   => $initial_post_id,
+			'REPEFOEL_repeater_field' => $initial_repeater_field,
+		] );
 
 		$edit_url = add_query_arg(array(
 			'post' => $template_id,
@@ -553,6 +561,37 @@ class REPEFOEL_ELEMENTOR_ADDON
 			'template_title' => $template_title,
 			'edit_url' => $edit_url
 		));
+	}
+
+	public function repefoel_update_template_preview_settings()
+	{
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( 'Insufficient permissions' );
+		}
+
+		$template_id    = absint( $_POST['template_id'] ?? 0 );
+		$post_id        = absint( $_POST['post_id'] ?? 0 );
+		$repeater_field = sanitize_text_field( $_POST['repeater_field'] ?? '' );
+
+		if ( ! $template_id ) {
+			wp_send_json_error( 'Invalid template ID' );
+		}
+
+		$settings = get_post_meta( $template_id, '_elementor_page_settings', true );
+		if ( ! is_array( $settings ) ) {
+			$settings = [];
+		}
+
+		if ( $post_id ) {
+			$settings['REPEFOEL_preview_post'] = $post_id;
+		}
+		if ( $repeater_field ) {
+			$settings['REPEFOEL_repeater_field'] = $repeater_field;
+		}
+
+		update_post_meta( $template_id, '_elementor_page_settings', $settings );
+
+		wp_send_json_success();
 	}
 
 
