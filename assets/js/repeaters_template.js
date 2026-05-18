@@ -175,7 +175,7 @@
             });
         }
 
-        function repefoel_open_template_inline( template_id, template_title ) {
+        function repefoel_open_template_inline( template_id, template_title, isSlider ) {
             _repefoel_origin_doc_id = elementor.documents.getCurrent().id;
 
             $e.run('editor/documents/switch', {
@@ -183,12 +183,43 @@
                 mode: 'autosave'
             }).then(function() {
                 repefoel_show_back_nav( _repefoel_origin_doc_id, template_title );
+                if ( isSlider ) {
+                    repefoel_inject_slider_grid_css();
+                }
             }).catch(function(err) {
                 console.error('REPEFOEL: document switch failed', err);
             });
         }
 
-        function repefoel_apply_preview_settings_then_open( template_id, template_title, post_id, repeater_field ) {
+        function repefoel_inject_slider_grid_css() {
+            setTimeout(function() {
+                try {
+                    var $head = elementor.$preview.contents().find('head');
+                    if ( $head.length && !$head.find('#repefoel-slider-grid-css').length ) {
+                        $head.append(
+                            '<style id="repefoel-slider-grid-css">' +
+                            '.repefoel_acf_repeater_rs_sliders { overflow: visible !important; }' +
+                            '.repefoel_acf_repeater_rs_sliders .swiper-wrapper {' +
+                                'transform: none !important;' +
+                                'flex-wrap: wrap !important;' +
+                                'height: auto !important;' +
+                            '}' +
+                            '.repefoel_acf_repeater_rs_sliders .swiper-slide {' +
+                                'width: calc(33.333% - 10px) !important;' +
+                                'margin-right: 10px !important;' +
+                                'margin-bottom: 10px !important;' +
+                            '}' +
+                            '.acf_repeater_rs_swiper_product_sliders-nav { display: none !important; }' +
+                            '</style>'
+                        );
+                    }
+                } catch(e) {
+                    console.error('REPEFOEL: failed to inject grid preview CSS', e);
+                }
+            }, 600);
+        }
+
+        function repefoel_apply_preview_settings_then_open( template_id, template_title, post_id, repeater_field, isSlider ) {
             jQuery.ajax({
                 url: REPEFOELTemplateData.ajax_url,
                 method: 'POST',
@@ -199,7 +230,7 @@
                     repeater_field: repeater_field,
                 },
                 complete: function() {
-                    repefoel_open_template_inline( template_id, template_title );
+                    repefoel_open_template_inline( template_id, template_title, isSlider );
                 }
             });
         }
@@ -255,8 +286,16 @@
                                 'REPEFOEL_widget_post_repeater'
                             ].includes(currentElementType)
                         ) {
-                        setTimeout(function () {
+                        // Repeater and Slider have REPEFOEL_repeater_field; Post Repeater uses post type.
+                        var hasRepeaterField = [
+                            'REPEFOEL_widget_repeater',
+                            'REPEFOEL_widget_repeater_carousel'
+                        ].includes(currentElementType);
 
+                        // Slider needs grid-mode CSS injected into preview while editing.
+                        var isSlider = ( currentElementType === 'REPEFOEL_widget_repeater_carousel' );
+
+                        setTimeout(function () {
 
                             var sourceControl = editor.$el.find('[data-setting="repefoel_template_select"]');
                             var post_id = elementor.config.document.id;
@@ -287,16 +326,20 @@
                                 });
                             }
 
-
                             editor.$el.find('button[data-action="edit"]').on('click', function(){
-                                var $repeaterField = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
-                                var repeaterFieldVal = $repeaterField.val();
-                                if ( !$repeaterField.length || !repeaterFieldVal || repeaterFieldVal === '' ) {
-                                    editor.$el.find('#repefoel-field-notice').remove();
-                                    var $notice = $('<div id="repefoel-field-notice" style="color:#d63638;font-size:11px;margin:6px 0 0;padding:6px 8px;background:#fce9e9;border:1px solid #f5c5c5;border-radius:3px;">Please select a <strong>Repeater Field</strong> before editing a template.</div>');
-                                    $repeaterField.closest('.elementor-control').after($notice);
-                                    setTimeout(function() { $notice.fadeOut(300, function(){ $(this).remove(); }); }, 3500);
-                                    return;
+
+                                var repeaterFieldVal = '';
+
+                                if ( hasRepeaterField ) {
+                                    var $repeaterField = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
+                                    repeaterFieldVal = $repeaterField.val();
+                                    if ( !$repeaterField.length || !repeaterFieldVal || repeaterFieldVal === '' ) {
+                                        editor.$el.find('#repefoel-field-notice').remove();
+                                        var $notice = $('<div id="repefoel-field-notice" style="color:#d63638;font-size:11px;margin:6px 0 0;padding:6px 8px;background:#fce9e9;border:1px solid #f5c5c5;border-radius:3px;">Please select a <strong>Repeater Field</strong> before editing a template.</div>');
+                                        $repeaterField.closest('.elementor-control').after($notice);
+                                        setTimeout(function() { $notice.fadeOut(300, function(){ $(this).remove(); }); }, 3500);
+                                        return;
+                                    }
                                 }
 
                                 var sourcetemplate_id = '';
@@ -318,7 +361,8 @@
                                         sourcetemplate_id,
                                         sourcetemplate_title,
                                         elementor.config.document.id,
-                                        repeaterFieldVal
+                                        repeaterFieldVal,
+                                        isSlider
                                     );
                                 }
                             });
@@ -326,14 +370,18 @@
                             editor.$el.find('button[data-action="add"]').on('click', function(e){
                                 e.preventDefault();
 
-                                var $repeaterField = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
-                                var repeaterFieldVal = $repeaterField.val();
-                                if ( !$repeaterField.length || !repeaterFieldVal || repeaterFieldVal === '' ) {
-                                    editor.$el.find('#repefoel-field-notice').remove();
-                                    var $notice = $('<div id="repefoel-field-notice" style="color:#d63638;font-size:11px;margin:6px 0 0;padding:6px 8px;background:#fce9e9;border:1px solid #f5c5c5;border-radius:3px;">Please select a <strong>Repeater Field</strong> before adding a template.</div>');
-                                    $repeaterField.closest('.elementor-control').after($notice);
-                                    setTimeout(function() { $notice.fadeOut(300, function(){ $(this).remove(); }); }, 3500);
-                                    return;
+                                var repeaterFieldVal = '';
+
+                                if ( hasRepeaterField ) {
+                                    var $repeaterField = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
+                                    repeaterFieldVal = $repeaterField.val();
+                                    if ( !$repeaterField.length || !repeaterFieldVal || repeaterFieldVal === '' ) {
+                                        editor.$el.find('#repefoel-field-notice').remove();
+                                        var $notice = $('<div id="repefoel-field-notice" style="color:#d63638;font-size:11px;margin:6px 0 0;padding:6px 8px;background:#fce9e9;border:1px solid #f5c5c5;border-radius:3px;">Please select a <strong>Repeater Field</strong> before adding a template.</div>');
+                                        $repeaterField.closest('.elementor-control').after($notice);
+                                        setTimeout(function() { $notice.fadeOut(300, function(){ $(this).remove(); }); }, 3500);
+                                        return;
+                                    }
                                 }
 
                                 var $this = $(this);
@@ -363,7 +411,7 @@
 
                                         editor.$el.find('#elementor-controls').attr('data-template_id', response.data.template_id).attr('data-template_title', response.data.template_title);
 
-                                        repefoel_open_template_inline( response.data.template_id, response.data.template_title );
+                                        repefoel_open_template_inline( response.data.template_id, response.data.template_title, isSlider );
                                     }
 
                                   }
