@@ -175,6 +175,30 @@
             });
         }
 
+        function repefoel_select_first_container() {
+            var attempts = 0;
+            var interval = setInterval(function() {
+                if ( ++attempts > 25 ) {
+                    clearInterval(interval);
+                    return;
+                }
+                try {
+                    var previewView = elementor.getPreviewView();
+                    if ( !previewView || !previewView.children || !previewView.children.length ) {
+                        return;
+                    }
+                    var firstView = previewView.children.first();
+                    if ( !firstView || !firstView.container ) {
+                        return;
+                    }
+                    clearInterval(interval);
+                    $e.run('document/elements/select', { container: firstView.container });
+                } catch(e) {
+                    // keep retrying
+                }
+            }, 200);
+        }
+
         function repefoel_open_template_inline( template_id, template_title, isSlider ) {
             _repefoel_origin_doc_id = elementor.documents.getCurrent().id;
 
@@ -186,6 +210,7 @@
                 if ( isSlider ) {
                     repefoel_inject_slider_grid_css();
                 }
+                repefoel_select_first_container();
             }).catch(function(err) {
                 console.error('REPEFOEL: document switch failed', err);
             });
