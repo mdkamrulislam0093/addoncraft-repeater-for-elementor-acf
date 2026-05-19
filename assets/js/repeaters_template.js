@@ -175,28 +175,62 @@
             });
         }
 
-        function repefoel_select_first_container() {
+        function repefoel_select_first_container( docId ) {
             var attempts = 0;
             var interval = setInterval(function() {
-                if ( ++attempts > 25 ) {
+                if ( ++attempts > 40 ) {
                     clearInterval(interval);
                     return;
                 }
                 try {
+                    // Guard: ensure the document we switched to is still the current one.
+                    var currentDoc = elementor.documents.getCurrent();
+                    if ( !currentDoc || ( docId && currentDoc.id !== docId ) ) {
+                        return;
+                    }
+
+                    // Strategy 1: getPreviewView() + container (preferred).
+                    
                     var previewView = elementor.getPreviewView();
-                    if ( !previewView || !previewView.children || !previewView.children.length ) {
-                        return;
+                    console.log(elementor);
+                    console.log(previewView);
+                    if ( previewView && previewView.children && previewView.children.length ) {
+                        var firstView = typeof previewView.children.first === 'function'
+                            ? previewView.children.first()
+                            : previewView.children[0];
+                        if ( firstView && firstView.container ) {
+                            clearInterval(interval);
+                            $e.run('document/elements/select', { container: firstView.container });
+                            return;
+                        }
                     }
-                    var firstView = previewView.children.first();
-                    if ( !firstView || !firstView.container ) {
-                        return;
+
+                    // Strategy 2: document container children.
+                    if ( currentDoc.container && currentDoc.container.children ) {
+                        var docChildren = currentDoc.container.children;
+                        var firstChild = typeof docChildren.first === 'function'
+                            ? docChildren.first()
+                            : ( Array.isArray( docChildren ) ? docChildren[0] : null );
+                        if ( firstChild ) {
+                            clearInterval(interval);
+                            $e.run('document/elements/select', { container: firstChild });
+                            return;
+                        }
                     }
-                    clearInterval(interval);
-                    $e.run('document/elements/select', { container: firstView.container });
+
+                    // Strategy 3 (fallback after 10 failed attempts): click the first
+                    // rendered element in the preview iframe directly.
+                    if ( attempts > 10 ) {
+                        var $firstEl = elementor.$preview.contents().find('.elementor-element').first();
+                        if ( $firstEl.length ) {
+                            clearInterval(interval);
+                            $firstEl.trigger('click');
+                        }
+                    }
                 } catch(e) {
                     // keep retrying
                 }
-            }, 200);
+            }, 400);
         }
 
         function repefoel_open_template_inline( template_id, template_title, isSlider ) {
@@ -210,7 +244,8 @@
                 if ( isSlider ) {
                     repefoel_inject_slider_grid_css();
                 }
-                repefoel_select_first_container();
+                console.log(template_id);
+                repefoel_select_first_container( parseInt( template_id ) );
             }).catch(function(err) {
                 console.error('REPEFOEL: document switch failed', err);
             });
@@ -294,6 +329,46 @@
         })();
 
         // ─────────────────────────────────────────────────────────────────
+
+        /**
+         * Fetch ACF repeater fields for a given post and repopulate the
+         * REPEFOEL_repeater_field SELECT2 control with the results.
+         */
+        function repefoel_update_repeater_field_options( $select, post_id ) {
+            if ( !$select || !$select.length ) return;
+
+            var previousValue = $select.val();
+
+            jQuery.ajax({
+                url: REPEFOELTemplateData.ajax_url,
+                method: 'POST',
+                data: {
+                    action:   'repefoel_get_post_repeater_fields',
+                    nonce:    REPEFOELTemplateData.nonce,
+                    post_id:  post_id || 0,
+                },
+                success: function( response ) {
+                    if ( !response.success ) return;
+
+                    var fields = response.data || {};
+
+                    // Rebuild option list, keeping an empty placeholder first.
+                    $select.empty().append( $('<option>', { value: '', text: '' }) );
+
+                    jQuery.each( fields, function( value, label ) {
+                        $select.append( $('<option>', { value: value, text: label }) );
+                    });
+
+                    // Restore previously saved value when it still exists.
+                    if ( previousValue && $select.find('option[value="' + previousValue + '"]').length ) {
+                        $select.val( previousValue );
+                    }
+
+                    // Notify SELECT2 and the Elementor model of the change.
+                    $select.trigger('change');
+                }
+            });
+        }
 
         elementor.channels.editor.on('section:activated', (secionName, editor) => {
             // const sectionName = model?.getOption('name');
@@ -458,6 +533,50 @@
 
                             }
 
+                            // ── Dynamic Repeater Field options based on ACF Repeater Source ──
+                            if ( hasRepeaterField ) {
+                                var $repeaterFieldSelect = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
+                                var widgetSettings       = editor.getOption('editedElementView').getEditModel().get('settings');
+
+                                // Use a stable context object so we can cleanly remove only our
+                                // listeners on each re-open without touching Elementor's own listeners.
+                                if ( !editor._repefoelRfCtx ) {
+                                    editor._repefoelRfCtx = {};
+                                }
+                                var rfCtx = editor._repefoelRfCtx;
+                                widgetSettings.off( null, null, rfCtx );
+
+                                // On section open: populate based on the currently saved source.
+                                var initialSource = widgetSettings.get('repeater_query_source') || 'current';
+                                var initialPostId = ( initialSource === 'manual' && widgetSettings.get('repeater_manual_posts') )
+                                    ? widgetSettings.get('repeater_manual_posts')
+                                    : elementor.config.document.id;
+
+                                repefoel_update_repeater_field_options( $repeaterFieldSelect, initialPostId );
+
+                                // When "ACF Repeater Source" changes → reload field list.
+                                widgetSettings.on( 'change:repeater_query_source', function() {
+                                    var source = widgetSettings.get('repeater_query_source');
+                                    if ( source === 'current' ) {
+                                        repefoel_update_repeater_field_options( $repeaterFieldSelect, elementor.config.document.id );
+                                    } else {
+                                        var manualId = widgetSettings.get('repeater_manual_posts');
+                                        if ( manualId ) {
+                                            repefoel_update_repeater_field_options( $repeaterFieldSelect, manualId );
+                                        }
+                                    }
+                                }, rfCtx );
+
+                                // When "Select Posts" changes in manual mode → reload field list.
+                                widgetSettings.on( 'change:repeater_manual_posts', function() {
+                                    if ( widgetSettings.get('repeater_query_source') === 'manual' ) {
+                                        var manualId = widgetSettings.get('repeater_manual_posts');
+                                        if ( manualId ) {
+                                            repefoel_update_repeater_field_options( $repeaterFieldSelect, manualId );
+                                        }
+                                    }
+                                }, rfCtx );
+                            }
 
                         }, 10);
                     }

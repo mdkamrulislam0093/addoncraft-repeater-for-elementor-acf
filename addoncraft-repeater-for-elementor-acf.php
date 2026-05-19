@@ -95,6 +95,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 		add_action('elementor/editor/after_enqueue_scripts', [$this, 'repefoel_enqueue_editor_scripts']);
 		add_action('wp_ajax_repefoel_create_elementor_repeater_template', [$this, 'repefoel_create_elementor_repeater_template']);
 		add_action('wp_ajax_repefoel_update_template_preview_settings', [$this, 'repefoel_update_template_preview_settings']);
+		add_action('wp_ajax_repefoel_get_post_repeater_fields', [$this, 'repefoel_get_post_repeater_fields']);
 
 		// Enqueue REPEFOEL template CSS inside the editor preview so widget styles appear correctly.
 		// Elementor only loads CSS for the document being edited; embedded templates need explicit loading.
@@ -561,6 +562,37 @@ class REPEFOEL_ELEMENTOR_ADDON
 			'template_title' => $template_title,
 			'edit_url' => $edit_url
 		));
+	}
+
+	public function repefoel_get_post_repeater_fields() {
+		check_ajax_referer( 'repefoel_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( 'Insufficient permissions' );
+		}
+
+		if ( ! function_exists( 'acf_get_field_groups' ) || ! function_exists( 'acf_get_fields' ) ) {
+			wp_send_json_success( [] );
+		}
+
+		$post_id = absint( $_POST['post_id'] ?? 0 );
+		$args    = $post_id ? [ 'post_id' => $post_id ] : [];
+		$groups  = acf_get_field_groups( $args );
+		$fields  = [];
+
+		foreach ( $groups as $group ) {
+			$group_fields = acf_get_fields( $group['ID'] );
+			if ( empty( $group_fields ) ) {
+				continue;
+			}
+			foreach ( $group_fields as $field ) {
+				if ( $field['type'] === 'repeater' ) {
+					$fields[ $field['name'] ] = $field['label'];
+				}
+			}
+		}
+
+		wp_send_json_success( $fields );
 	}
 
 	public function repefoel_update_template_preview_settings()
