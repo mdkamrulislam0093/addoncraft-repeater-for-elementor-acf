@@ -4,7 +4,7 @@ Donate link: https://addonscraft.com
 Tags: acf, elementor, repeater, loop, acf repeater elementor
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.6
+Stable tag: 2.4
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -142,6 +142,23 @@ Yes. Content is rendered dynamically but remains fully crawlable by search engin
 
 
 == Changelog ==
+= 2.3.0 =
+* Minor Update
+
+= 2.2.0 =
+* Major Update
+
+
+= 2.1.0 =
+* Major Update
+
+
+= 2.0.0 =
+* Easy UI loop template editing improvements.
+* Improvements to post types functionality.
+* Enabled repeater field conditions with required field validation.
+
+
 = 1.4.0 =
 * Post Widget Enhancement: You can now repeat the post, page or any custom post type posts.
 
@@ -165,5 +182,5 @@ Yes. Content is rendered dynamically but remains fully crawlable by search engin
 
 == Upgrade Notice ==
 
-= 1.4.0 =
-* Post Widget Enhancement: You can now repeat the post, page or any custom post type posts.
+= 2.3 =
+* Minor Updates

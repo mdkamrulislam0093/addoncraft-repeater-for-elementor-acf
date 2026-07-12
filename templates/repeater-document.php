@@ -89,7 +89,7 @@ class REPEFOEL_Repeater_Document extends Library_Document {
                     'size' => 410,
                 ],
                 'selectors' => [
-                    'div[data-elementor-type="REPEFOEL_repeater"]' => 'width: {{SIZE}}{{UNIT}}; margin: auto; padding-top: 100px;',
+                    'div[data-elementor-type="REPEFOEL_repeater"]' => 'width: {{SIZE}}{{UNIT}}; margin: auto;',
                     
                 ],
             ]

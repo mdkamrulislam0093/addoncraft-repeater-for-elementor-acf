@@ -4,7 +4,7 @@
  * Description: Addoncraft Repeater for Elementor ACF is a plugin you install after Elementor! It’s packed with a variety of stunning elements and different types of widgets to enhance your website design.
  * Plugin URI: https://wordpress.org/plugins/addoncraft-repeater-for-elementor-acf
  * Author: addoncraft
- * Version: 1.7
+ * Version: 2.4
  * Requires Plugins: elementor
  * Author URI: https://addonscraft.com/
  * License: GPLv3
@@ -17,7 +17,7 @@ defined('ABSPATH') || exit;
 
 define('REPEFOEL__PLUGIN_PATH', trailingslashit(plugin_dir_path(__FILE__)));
 define('REPEFOEL__PLUGIN_URL', trailingslashit(plugins_url('/', __FILE__)));
-define('REPEFOEL__PLUGIN_VERSION', '1.7');
+define('REPEFOEL__PLUGIN_VERSION', '2.0');
 
 class REPEFOEL_ELEMENTOR_ADDON
 {
@@ -95,7 +95,6 @@ class REPEFOEL_ELEMENTOR_ADDON
 		add_action('elementor/editor/after_enqueue_scripts', [$this, 'repefoel_enqueue_editor_scripts']);
 		add_action('wp_ajax_repefoel_create_elementor_repeater_template', [$this, 'repefoel_create_elementor_repeater_template']);
 		add_action('wp_ajax_repefoel_update_template_preview_settings', [$this, 'repefoel_update_template_preview_settings']);
-		add_action('wp_ajax_repefoel_get_post_repeater_fields', [$this, 'repefoel_get_post_repeater_fields']);
 
 		// Enqueue REPEFOEL template CSS inside the editor preview so widget styles appear correctly.
 		// Elementor only loads CSS for the document being edited; embedded templates need explicit loading.
@@ -143,7 +142,11 @@ class REPEFOEL_ELEMENTOR_ADDON
 
 		foreach ($template_ids as $template_id) {
 			if (class_exists('\Elementor\Core\Files\CSS\Post')) {
-				\Elementor\Core\Files\CSS\Post::create((int) $template_id)->enqueue();
+				try {
+					\Elementor\Core\Files\CSS\Post::create((int) $template_id)->enqueue();
+				} catch (\Throwable $e) {
+					// Skip templates with missing or corrupted Elementor settings meta.
+				}
 			}
 		}
 	}
@@ -207,6 +210,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 			'REPEFOELTemplateData',
 			[
 				'ajax_url'        => admin_url('admin-ajax.php'),
+				'editUrl'         => admin_url('post.php'),
 				'nonce'           => wp_create_nonce('repefoel_nonce'),
 				'customTemplate'  => esc_html__('Custom Template', 'addoncraft-repeater-for-elementor-acf'),
 				'customTemplates' => esc_html__('Custom Templates', 'addoncraft-repeater-for-elementor-acf'),
@@ -351,7 +355,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 		/**
 		 * Dynamic Tag for URL field dynamic tag like Hyperlink
 		 */
-		require_once 'controls/repeater-control.php';
+		require_once REPEFOEL__PLUGIN_PATH . 'controls/repeater-control.php';
 		$controls_manager->register(new \REPEFOEL_repeater_control());
 
 
@@ -360,7 +364,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 
 	public function REPEFOEL_elementor_document_register($documents_manager)
 	{
-		require_once 'templates/repeater-document.php';
+		require_once REPEFOEL__PLUGIN_PATH . 'templates/repeater-document.php';
 		$documents_manager->register_document_type('REPEFOEL_repeater', 'REPEFOEL_Repeater_Document');
 	}
 
@@ -423,7 +427,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 		wp_register_style('repefoel-rp-style', plugins_url('/assets/css/rp-widget.css', __FILE__), $css_deps, REPEFOEL__PLUGIN_VERSION, 'all');
 		wp_enqueue_style('repefoel-rp-style');
 
-		wp_register_script('repefoel-swiper-init', plugins_url('/assets/js/swiper-init.js', __FILE__), ['jquery'], REPEFOEL__PLUGIN_VERSION, true);
+		wp_register_script('repefoel-swiper-init', plugins_url('/assets/js/swiper-init.js', __FILE__), ['swiper'], REPEFOEL__PLUGIN_VERSION, true);
 		wp_enqueue_script('repefoel-swiper-init');
 	}
 
@@ -470,15 +474,15 @@ class REPEFOEL_ELEMENTOR_ADDON
 
 	public function repefoel_register_new_widgets()
 	{
-		require_once 'elementor/element/abstract-repefoel-widget.php';
+		require_once REPEFOEL__PLUGIN_PATH . 'elementor/element/abstract-repefoel-widget.php';
 
-		require_once 'elementor/element/acf/acf_repeater.php';
+		require_once REPEFOEL__PLUGIN_PATH . 'elementor/element/acf/acf_repeater.php';
 		\Elementor\Plugin::instance()->widgets_manager->register_widget_type(new REPEFOEL_ACF_Repeater);
 
-		require_once 'elementor/element/acf/acf_repeater_carousel.php';
+		require_once REPEFOEL__PLUGIN_PATH . 'elementor/element/acf/acf_repeater_carousel.php';
 		\Elementor\Plugin::instance()->widgets_manager->register_widget_type(new REPEFOEL_ACF_Repeater_Carousel);
 
-		require_once 'elementor/element/post/post-repeater.php';
+		require_once REPEFOEL__PLUGIN_PATH . 'elementor/element/post/post-repeater.php';
 		\Elementor\Plugin::instance()->widgets_manager->register_widget_type(new REPEFOEL_post_Repeater);
 	}
 
@@ -562,37 +566,6 @@ class REPEFOEL_ELEMENTOR_ADDON
 			'template_title' => $template_title,
 			'edit_url' => $edit_url
 		));
-	}
-
-	public function repefoel_get_post_repeater_fields() {
-		check_ajax_referer( 'repefoel_nonce', 'nonce' );
-
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			wp_send_json_error( 'Insufficient permissions' );
-		}
-
-		if ( ! function_exists( 'acf_get_field_groups' ) || ! function_exists( 'acf_get_fields' ) ) {
-			wp_send_json_success( [] );
-		}
-
-		$post_id = absint( $_POST['post_id'] ?? 0 );
-		$args    = $post_id ? [ 'post_id' => $post_id ] : [];
-		$groups  = acf_get_field_groups( $args );
-		$fields  = [];
-
-		foreach ( $groups as $group ) {
-			$group_fields = acf_get_fields( $group['ID'] );
-			if ( empty( $group_fields ) ) {
-				continue;
-			}
-			foreach ( $group_fields as $field ) {
-				if ( $field['type'] === 'repeater' ) {
-					$fields[ $field['name'] ] = $field['label'];
-				}
-			}
-		}
-
-		wp_send_json_success( $fields );
 	}
 
 	public function repefoel_update_template_preview_settings()

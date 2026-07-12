@@ -20,6 +20,33 @@ class REPEFOEL_ACF_Repeater extends REPEFOEL_Widget_Base {
 
     protected function register_controls() {
 
+        // ── Query ────────────────────────────────────────────────────────
+        $this->start_controls_section( 'repeater_section_query', [
+            'label' => __( 'Query', 'addoncraft-repeater-for-elementor-acf' ),
+        ] );
+
+        $this->add_control( 'repeater_query_source', [
+            'label'   => __( 'ACF Repeater Source', 'addoncraft-repeater-for-elementor-acf' ),
+            'type'    => \Elementor\Controls_Manager::SELECT,
+            'default' => 'current',
+            'options' => [
+                'current' => __( 'Current', 'addoncraft-repeater-for-elementor-acf' ),
+                'manual'  => __( 'Manual', 'addoncraft-repeater-for-elementor-acf' ),
+            ],
+        ] );
+
+        $this->add_control( 'repeater_manual_posts', [
+            'label'       => __( 'Select Posts', 'addoncraft-repeater-for-elementor-acf' ),
+            'type'        => \Elementor\Controls_Manager::SELECT2,
+            'options'     => $this->get_all_posts(),
+            'multiple'    => false,
+            'label_block' => true,
+            'condition'   => [ 'repeater_query_source' => 'manual' ],
+        ] );
+
+        $this->end_controls_section();
+
+        
         // ── Content ──────────────────────────────────────────────────────
         $this->start_controls_section( 'content_section', [
             'label' => __( 'Content', 'addoncraft-repeater-for-elementor-acf' ),
@@ -80,31 +107,7 @@ class REPEFOEL_ACF_Repeater extends REPEFOEL_Widget_Base {
 
         $this->end_controls_section();
 
-        // ── Query ────────────────────────────────────────────────────────
-        $this->start_controls_section( 'repeater_section_query', [
-            'label' => __( 'Query', 'addoncraft-repeater-for-elementor-acf' ),
-        ] );
 
-        $this->add_control( 'repeater_query_source', [
-            'label'   => __( 'ACF Repeater Source', 'addoncraft-repeater-for-elementor-acf' ),
-            'type'    => \Elementor\Controls_Manager::SELECT,
-            'default' => 'current',
-            'options' => [
-                'current' => __( 'Current', 'addoncraft-repeater-for-elementor-acf' ),
-                'manual'  => __( 'Manual', 'addoncraft-repeater-for-elementor-acf' ),
-            ],
-        ] );
-
-        $this->add_control( 'repeater_manual_posts', [
-            'label'       => __( 'Select Posts', 'addoncraft-repeater-for-elementor-acf' ),
-            'type'        => \Elementor\Controls_Manager::SELECT2,
-            'options'     => $this->get_all_posts(),
-            'multiple'    => false,
-            'label_block' => true,
-            'condition'   => [ 'repeater_query_source' => 'manual' ],
-        ] );
-
-        $this->end_controls_section();
     }
 
     protected function render() {

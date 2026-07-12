@@ -1,59 +1,46 @@
-/**
- * REPEFOEL Swiper Initializer
- * Replaces per-widget inline scripts. Reads data-swiper_settings JSON
- * from every .repefoel_acf_repeater_rs_sliders.swiper element and boots Swiper.
- */
-( function ( $ ) {
-    'use strict';
+( function () {
+	'use strict';
 
-    /**
-     * Initialise a single Swiper container.
-     *
-     * @param {HTMLElement} container  The .swiper element.
-     */
-    function initOne( container ) {
-        if ( ! container ) return;
+	function initRepeaterSliders() {
+		document.querySelectorAll( '.repefoel_acf_repeater_rs_sliders.swiper' ).forEach( function ( el ) {
+			if ( el._repefoelSwiper ) {
+				return; // already initialized
+			}
 
-        // Already initialised – destroy first so settings refresh in the editor.
-        if ( container.swiper ) {
-            container.swiper.destroy( true, true );
-        }
+			var raw = el.getAttribute( 'data-swiper_settings' );
+			if ( ! raw ) {
+				return;
+			}
 
-        if ( typeof Swiper === 'undefined' ) return;
+			var settings;
+			try {
+				settings = JSON.parse( raw );
+			} catch ( e ) {
+				return;
+			}
 
-        try {
-            var opts = JSON.parse( container.getAttribute( 'data-swiper_settings' ) || '{}' );
-            new Swiper( container, opts );
-        } catch ( e ) {
-            // Malformed JSON in data attribute – skip silently.
-        }
-    }
+			if ( typeof Swiper === 'undefined' ) {
+				return;
+			}
 
-    /**
-     * Initialise every un-initialised carousel on the page.
-     */
-    function initAll() {
-        document
-            .querySelectorAll( '.repefoel_acf_repeater_rs_sliders.swiper' )
-            .forEach( initOne );
-    }
+			el._repefoelSwiper = new Swiper( el, settings );
+		} );
+	}
 
-    // ── Frontend page load ───────────────────────────────────────────────
-    $( document ).ready( initAll );
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', initRepeaterSliders );
+	} else {
+		initRepeaterSliders();
+	}
 
-    // ── Elementor editor / preview re-render ────────────────────────────
-    $( window ).on( 'elementor/frontend/init', function () {
-        if ( typeof elementorFrontend === 'undefined' ) return;
-
-        elementorFrontend.hooks.addAction(
-            'frontend/element_ready/REPEFOEL_widget_repeater_carousel.default',
-            function ( $scope ) {
-                var container = $scope[ 0 ].querySelector(
-                    '.repefoel_acf_repeater_rs_sliders.swiper'
-                );
-                initOne( container );
-            }
-        );
-    } );
-
-} )( jQuery );
+	// Re-init after Elementor frontend is ready (handles editor preview reloads).
+	if ( window.elementorFrontend ) {
+		window.elementorFrontend.hooks.addAction( 'frontend/element_ready/global', initRepeaterSliders );
+	} else {
+		document.addEventListener( 'elementor/frontend/init', function () {
+			if ( window.elementorFrontend ) {
+				window.elementorFrontend.hooks.addAction( 'frontend/element_ready/global', initRepeaterSliders );
+			}
+		} );
+	}
+} )();

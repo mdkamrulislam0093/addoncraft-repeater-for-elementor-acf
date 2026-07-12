@@ -28,7 +28,8 @@ abstract class REPEFOEL_Widget_Base extends \Elementor\Widget_Base {
 
     /**
      * Return all published Elementor templates of type REPEFOEL_repeater.
-     */
+    */
+    
     public function get_all_repeater_template() {
         $templates = get_posts( [
             'post_type'              => 'elementor_library',

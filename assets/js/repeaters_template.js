@@ -233,22 +233,87 @@
             }, 400);
         }
 
-        function repefoel_open_template_inline( template_id, template_title, isSlider ) {
-            _repefoel_origin_doc_id = elementor.documents.getCurrent().id;
+        var _repefoel_switch_in_progress = false;
 
-            $e.run('editor/documents/switch', {
-                id: parseInt( template_id ),
-                mode: 'autosave'
-            }).then(function() {
-                repefoel_show_back_nav( _repefoel_origin_doc_id, template_title );
-                if ( isSlider ) {
-                    repefoel_inject_slider_grid_css();
+        // The in-place "editor/documents/switch" command can only attach to a
+        // document whose wrapper (`.elementor-{template_id}`) is actually present
+        // in the live preview iframe. Our template is only rendered there when the
+        // widget on the current post has at least one row for the selected
+        // repeater field. When it doesn't (empty field, stale preview, etc.), fall
+        // back to opening the template in a new tab instead of failing silently.
+        function repefoel_template_in_preview( template_id ) {
+            try {
+                return !!( elementor.$previewContents && elementor.$previewContents.find( '.elementor-' + template_id ).length );
+            } catch ( e ) {
+                return false;
+            }
+        }
+
+        function repefoel_open_template_edit_tab( template_id ) {
+            var url = REPEFOELTemplateData.editUrl + '?post=' + parseInt( template_id ) + '&action=elementor';
+            window.open( url, '_blank' );
+        }
+
+        function repefoel_show_inline_edit_notice( message ) {
+            $('#repefoel-field-notice').remove();
+            var $notice = $('<div id="repefoel-field-notice" style="color:#d63638;font-size:11px;margin:6px 0 0;padding:6px 8px;background:#fce9e9;border:1px solid #f5c5c5;border-radius:3px;">' + message + '</div>');
+            $('[data-setting="REPEFOEL_repeater_field"]').closest('.elementor-control').after( $notice );
+            setTimeout(function() { $notice.fadeOut(300, function(){ $(this).remove(); }); }, 4500);
+        }
+
+        function repefoel_open_template_inline( template_id, template_title, isSlider ) {
+            if ( _repefoel_switch_in_progress ) {
+                return;
+            }
+            _repefoel_switch_in_progress = true;
+
+            function doSwitch() {
+                _repefoel_origin_doc_id = elementor.documents.getCurrent().id;
+
+                $e.run('editor/documents/switch', {
+                    id: parseInt( template_id ),
+                    mode: 'autosave'
+                }).then(function() {
+                    repefoel_show_back_nav( _repefoel_origin_doc_id, template_title );
+                    if ( isSlider ) {
+                        repefoel_inject_slider_grid_css();
+                    }
+                    repefoel_select_first_container( parseInt( template_id ) );
+                }).catch(function(err) {
+                    console.error('REPEFOEL: document switch failed', err);
+                    repefoel_show_inline_edit_notice( 'Couldn\'t open the template inline here, opening it in a new tab instead.' );
+                    repefoel_open_template_edit_tab( template_id );
+                }).finally(function() {
+                    _repefoel_switch_in_progress = false;
+                });
+            }
+
+            if ( repefoel_template_in_preview( template_id ) ) {
+                doSwitch();
+                return;
+            }
+
+            // Not rendered yet — refresh the preview and give it a moment to appear
+            // before giving up on inline editing.
+            elementor.reloadPreview();
+
+            var attempts = 0;
+            var waitForPreview = setInterval(function() {
+                attempts++;
+
+                if ( repefoel_template_in_preview( template_id ) ) {
+                    clearInterval( waitForPreview );
+                    doSwitch();
+                    return;
                 }
-                console.log(template_id);
-                repefoel_select_first_container( parseInt( template_id ) );
-            }).catch(function(err) {
-                console.error('REPEFOEL: document switch failed', err);
-            });
+
+                if ( attempts >= 5 ) {
+                    clearInterval( waitForPreview );
+                    _repefoel_switch_in_progress = false;
+                    repefoel_show_inline_edit_notice( 'This page has no items for the selected Repeater Field, so the template can\'t be edited inline. Opening it in a new tab instead.' );
+                    repefoel_open_template_edit_tab( template_id );
+                }
+            }, 400);
         }
 
         function repefoel_inject_slider_grid_css() {
@@ -330,46 +395,6 @@
 
         // ─────────────────────────────────────────────────────────────────
 
-        /**
-         * Fetch ACF repeater fields for a given post and repopulate the
-         * REPEFOEL_repeater_field SELECT2 control with the results.
-         */
-        function repefoel_update_repeater_field_options( $select, post_id ) {
-            if ( !$select || !$select.length ) return;
-
-            var previousValue = $select.val();
-
-            jQuery.ajax({
-                url: REPEFOELTemplateData.ajax_url,
-                method: 'POST',
-                data: {
-                    action:   'repefoel_get_post_repeater_fields',
-                    nonce:    REPEFOELTemplateData.nonce,
-                    post_id:  post_id || 0,
-                },
-                success: function( response ) {
-                    if ( !response.success ) return;
-
-                    var fields = response.data || {};
-
-                    // Rebuild option list, keeping an empty placeholder first.
-                    $select.empty().append( $('<option>', { value: '', text: '' }) );
-
-                    jQuery.each( fields, function( value, label ) {
-                        $select.append( $('<option>', { value: value, text: label }) );
-                    });
-
-                    // Restore previously saved value when it still exists.
-                    if ( previousValue && $select.find('option[value="' + previousValue + '"]').length ) {
-                        $select.val( previousValue );
-                    }
-
-                    // Notify SELECT2 and the Elementor model of the change.
-                    $select.trigger('change');
-                }
-            });
-        }
-
         elementor.channels.editor.on('section:activated', (secionName, editor) => {
             // const sectionName = model?.getOption('name');
             if ( secionName == 'content_section' ) {
@@ -411,7 +436,7 @@
                                     editor.$el.find('button[data-action="edit"]').hide();
                                 }
 
-                                sourceControl.on('change', function(e){
+                                sourceControl.off('change').on('change', function(e){
                                     e.preventDefault();
                                     let current_val = $(this).val();
 
@@ -426,13 +451,14 @@
                                 });
                             }
 
-                            editor.$el.find('button[data-action="edit"]').on('click', function(){
+                            editor.$el.find('button[data-action="edit"]').off('click').on('click', function(){
 
                                 var repeaterFieldVal = '';
-
+                                
                                 if ( hasRepeaterField ) {
                                     var $repeaterField = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
                                     repeaterFieldVal = $repeaterField.val();
+
                                     if ( !$repeaterField.length || !repeaterFieldVal || repeaterFieldVal === '' ) {
                                         editor.$el.find('#repefoel-field-notice').remove();
                                         var $notice = $('<div id="repefoel-field-notice" style="color:#d63638;font-size:11px;margin:6px 0 0;padding:6px 8px;background:#fce9e9;border:1px solid #f5c5c5;border-radius:3px;">Please select a <strong>Repeater Field</strong> before editing a template.</div>');
@@ -467,7 +493,7 @@
                                 }
                             });
 
-                            editor.$el.find('button[data-action="add"]').on('click', function(e){
+                            editor.$el.find('button[data-action="add"]').off('click').on('click', function(e){
                                 e.preventDefault();
 
                                 var repeaterFieldVal = '';
@@ -531,51 +557,6 @@
                                     editor.$el.find('button[data-action="edit"]').attr('data-template_id', temporary_template_id);
                                 }
 
-                            }
-
-                            // ── Dynamic Repeater Field options based on ACF Repeater Source ──
-                            if ( hasRepeaterField ) {
-                                var $repeaterFieldSelect = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
-                                var widgetSettings       = editor.getOption('editedElementView').getEditModel().get('settings');
-
-                                // Use a stable context object so we can cleanly remove only our
-                                // listeners on each re-open without touching Elementor's own listeners.
-                                if ( !editor._repefoelRfCtx ) {
-                                    editor._repefoelRfCtx = {};
-                                }
-                                var rfCtx = editor._repefoelRfCtx;
-                                widgetSettings.off( null, null, rfCtx );
-
-                                // On section open: populate based on the currently saved source.
-                                var initialSource = widgetSettings.get('repeater_query_source') || 'current';
-                                var initialPostId = ( initialSource === 'manual' && widgetSettings.get('repeater_manual_posts') )
-                                    ? widgetSettings.get('repeater_manual_posts')
-                                    : elementor.config.document.id;
-
-                                repefoel_update_repeater_field_options( $repeaterFieldSelect, initialPostId );
-
-                                // When "ACF Repeater Source" changes → reload field list.
-                                widgetSettings.on( 'change:repeater_query_source', function() {
-                                    var source = widgetSettings.get('repeater_query_source');
-                                    if ( source === 'current' ) {
-                                        repefoel_update_repeater_field_options( $repeaterFieldSelect, elementor.config.document.id );
-                                    } else {
-                                        var manualId = widgetSettings.get('repeater_manual_posts');
-                                        if ( manualId ) {
-                                            repefoel_update_repeater_field_options( $repeaterFieldSelect, manualId );
-                                        }
-                                    }
-                                }, rfCtx );
-
-                                // When "Select Posts" changes in manual mode → reload field list.
-                                widgetSettings.on( 'change:repeater_manual_posts', function() {
-                                    if ( widgetSettings.get('repeater_query_source') === 'manual' ) {
-                                        var manualId = widgetSettings.get('repeater_manual_posts');
-                                        if ( manualId ) {
-                                            repefoel_update_repeater_field_options( $repeaterFieldSelect, manualId );
-                                        }
-                                    }
-                                }, rfCtx );
                             }
 
                         }, 10);
