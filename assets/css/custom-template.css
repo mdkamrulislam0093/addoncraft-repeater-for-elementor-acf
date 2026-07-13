@@ -131,3 +131,21 @@
     display: block;
     margin: auto;
 }
+
+/* ── Highlight available Repeater Field options while its select2 dropdown is open ── */
+/* Select2 only ever writes aria-disabled="true" on disabled options — enabled
+   options get no aria-disabled attribute at all, so target "not disabled". */
+body.repefoel-field-select2-open .select2-results__option:not([aria-disabled="true"]) {
+    background-color: rgba(44, 174, 106, .12);
+    color: #1a7a46;
+    font-weight: 600;
+}
+
+body.repefoel-field-select2-open .select2-results__option:not([aria-disabled="true"]).select2-results__option--highlighted {
+    background-color: rgba(44, 174, 106, .28);
+    color: #ffffff;
+}
+
+body.repefoel-field-select2-open .select2-results__option[aria-disabled="true"] {
+    display: none;
+}

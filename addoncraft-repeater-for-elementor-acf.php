@@ -17,7 +17,7 @@ defined('ABSPATH') || exit;
 
 define('REPEFOEL__PLUGIN_PATH', trailingslashit(plugin_dir_path(__FILE__)));
 define('REPEFOEL__PLUGIN_URL', trailingslashit(plugins_url('/', __FILE__)));
-define('REPEFOEL__PLUGIN_VERSION', '2.0');
+define('REPEFOEL__PLUGIN_VERSION', '2.0.1');
 
 class REPEFOEL_ELEMENTOR_ADDON
 {
@@ -204,6 +204,11 @@ class REPEFOEL_ELEMENTOR_ADDON
 			true
 		);
 
+		// Field name => [post IDs with data] map, used to grey out Repeater
+		// Field options that don't apply to the selected source post.
+		$repeater_widget = \Elementor\Plugin::instance()->widgets_manager->get_widget_types('REPEFOEL_widget_repeater');
+		$field_post_map  = $repeater_widget ? $repeater_widget->get_repeater_field_post_map() : [];
+
 		// Localized strings for i18n
 		wp_localize_script(
 			'REPEFOEL-repeater-template',
@@ -218,6 +223,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 				'backLabel'       => esc_html__('Back', 'addoncraft-repeater-for-elementor-acf'),
 				'editingTemplate' => esc_html__('Loop Item', 'addoncraft-repeater-for-elementor-acf'),
 				'publishLabel'    => esc_html__('Save', 'addoncraft-repeater-for-elementor-acf'),
+				'fieldPostMap'    => $field_post_map,
 			]
 		);
 

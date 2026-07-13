@@ -233,6 +233,59 @@
             }, 400);
         }
 
+        // ── Repeater Field availability depends on ACF Repeater Source ────
+        // Purely client-side: each option gets tagged with a `data-posts`
+        // attribute (from the localized field→post-IDs map), then we just
+        // disable options whose post list doesn't include the resolved
+        // source post. No AJAX/DB query on source or post change.
+
+        function repefoel_tag_field_options( $field ) {
+            $field.find('option').each(function() {
+                var $opt = $(this);
+                if ( $opt.val() === '' || $opt.is('[data-posts]') ) return;
+                var ids = ( REPEFOELTemplateData.fieldPostMap && REPEFOELTemplateData.fieldPostMap[ $opt.val() ] ) || [];
+                $opt.attr( 'data-posts', ids.join(',') );
+            });
+        }
+
+        function repefoel_resolve_source_post_id( editor ) {
+            // Read from the settings model, not the DOM — Elementor doesn't keep
+            // every accordion section's controls rendered at once, so a control
+            // in a currently-collapsed section (e.g. repeater_query_source while
+            // Content is open) won't be found via editor.$el.find().
+            var widgetSettings = editor.getOption('editedElementView').getEditModel().get('settings');
+            var source = widgetSettings.get('repeater_query_source') || 'current';
+            
+            if ( source === 'manual' ) {
+                return widgetSettings.get('repeater_manual_posts') || '';
+            }
+
+            return elementor.config.document.id;
+        }
+
+        function repefoel_refresh_field_options( editor ) {
+            var $field = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
+            if ( !$field.length ) return;
+
+            repefoel_tag_field_options( $field );
+
+            var postId = String( repefoel_resolve_source_post_id( editor ) || '' );
+            
+            $field.find('option').each(function() {
+                var $opt = $(this);
+                if ( $opt.val() === '' ) return;
+                var ids = ( $opt.attr('data-posts') || '' ).split(',');
+
+                $opt.prop( 'disabled', !postId || ids.indexOf( postId ) === -1 );
+            });
+
+            if ( $field.val() && $field.find('option:selected').prop('disabled') ) {
+                $field.val('');
+            }
+
+            $field.trigger('change');
+        }
+
         var _repefoel_switch_in_progress = false;
 
         // The in-place "editor/documents/switch" command can only attach to a
@@ -307,7 +360,7 @@
                     return;
                 }
 
-                if ( attempts >= 5 ) {
+                if ( attempts >= 10 ) {
                     clearInterval( waitForPreview );
                     _repefoel_switch_in_progress = false;
                     repefoel_show_inline_edit_notice( 'This page has no items for the selected Repeater Field, so the template can\'t be edited inline. Opening it in a new tab instead.' );
@@ -397,7 +450,12 @@
 
         elementor.channels.editor.on('section:activated', (secionName, editor) => {
             // const sectionName = model?.getOption('name');
-            if ( secionName == 'content_section' ) {
+            // "ACF Repeater Source" / "Select Posts" live in repeater_section_query,
+            // while the Repeater Field select lives in content_section — both need
+            // this block so the availability wiring binds no matter which one the
+            // user opens first.
+            if ( secionName == 'content_section' || secionName == 'repeater_section_query' ) {
+
                 var model = editor.getOption('editedElementView').getEditModel();
                 var currentElementType = model.get('elType');
 
@@ -449,6 +507,43 @@
                                     }
 
                                 });
+                            }
+
+                            // ── Repeater Field availability based on ACF Repeater Source ──
+                            if ( hasRepeaterField ) {
+                                var widgetSettings = editor.getOption('editedElementView').getEditModel().get('settings');
+
+                                // Use a stable context object so we can cleanly remove only our
+                                // listeners on each re-open without touching Elementor's own listeners.
+                                if ( !editor._repefoelRfCtx ) {
+                                    editor._repefoelRfCtx = {};
+                                }
+                                var rfCtx = editor._repefoelRfCtx;
+                                widgetSettings.off( null, null, rfCtx );
+
+                                var repefoel_refresh_field_options_bound = function() {
+                                    repefoel_refresh_field_options( editor );
+                                };
+
+                                // Check availability as soon as the panel/section (re)opens.
+                                repefoel_refresh_field_options_bound();
+
+                                widgetSettings.on( 'change:repeater_query_source', repefoel_refresh_field_options_bound, rfCtx );
+                                widgetSettings.on( 'change:repeater_manual_posts', repefoel_refresh_field_options_bound, rfCtx );
+
+                                // Highlight the available (enabled) options while this
+                                // specific dropdown is open. Select2's dropdown renders
+                                // outside the control, so scope the styling with a body
+                                // class rather than a plain descendant selector.
+                                var $repeaterFieldSelect = editor.$el.find('[data-setting="REPEFOEL_repeater_field"]');
+                                $repeaterFieldSelect
+                                    .off('select2:open.repefoel select2:close.repefoel')
+                                    .on('select2:open.repefoel', function() {
+                                        $('body').addClass('repefoel-field-select2-open');
+                                    })
+                                    .on('select2:close.repefoel', function() {
+                                        $('body').removeClass('repefoel-field-select2-open');
+                                    });
                             }
 
                             editor.$el.find('button[data-action="edit"]').off('click').on('click', function(){

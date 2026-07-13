@@ -113,6 +113,37 @@ abstract class REPEFOEL_Widget_Base extends \Elementor\Widget_Base {
         return $options;
     }
 
+    /**
+     * Map each ACF repeater field name to the post IDs that currently have
+     * data in it, so the editor can grey out fields that don't apply to the
+     * selected source post — no AJAX needed, computed once and cached.
+     */
+    public function get_repeater_field_post_map() {
+        $cached = wp_cache_get( 'repefoel_field_post_map' );
+
+        if ( $cached !== false ) {
+            return $cached;
+        }
+
+        $fields = array_keys( $this->get_only_repeater_name() );
+        $map    = array_fill_keys( $fields, [] );
+
+        if ( ! empty( $fields ) ) {
+            foreach ( $this->get_all_posts() as $post_id => $title ) {
+                foreach ( $fields as $field_name ) {
+                    $value = get_field( $field_name, $post_id );
+                    if ( ! empty( $value ) && is_array( $value ) ) {
+                        $map[ $field_name ][] = $post_id;
+                    }
+                }
+            }
+        }
+
+        wp_cache_set( 'repefoel_field_post_map', $map, '', 3600 );
+
+        return $map;
+    }
+
     /* ------------------------------------------------------------------ */
     /* Render helpers                                                        */
     /* ------------------------------------------------------------------ */
