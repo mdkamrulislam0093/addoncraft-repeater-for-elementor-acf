@@ -421,7 +421,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends REPEFOEL_Widget_Base {
         $this->add_group_control( \Elementor\Group_Control_Background::get_type(), [
             'name'     => 'acf_repeater_rs_navigation_background',
             'types'    => [ 'classic' ],
-            'exclude'  => [ 'image' ],
+            'exclude'  => [ 'image' ], // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Elementor Group_Control_Background param, not a WP_Query arg.
             'selector' => '{{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-prev, {{WRAPPER}} .acf_repeater_rs_swiper_product_sliders-nav .swiper-button-next',
         ] );
 
@@ -658,8 +658,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends REPEFOEL_Widget_Base {
                  style="<?php echo esc_attr( $left_style ); ?>">
                 <?php
                 if ( $arrow_type === 'image' ) {
-                    $src = esc_url( $opts['repeater_slider_prev_image']['url'] ?? '' );
-                    printf( '<img src="%s" alt="" />', $src );
+                    printf( '<img src="%s" alt="" />', esc_url( $opts['repeater_slider_prev_image']['url'] ?? '' ) );
                 } elseif ( $arrow_type === 'icon' ) {
                     \Elementor\Icons_Manager::render_icon( $opts['repeater_slider_prev_icon'], [ 'aria-hidden' => 'true' ] );
                 }
@@ -670,8 +669,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends REPEFOEL_Widget_Base {
                  style="<?php echo esc_attr( $right_style ); ?>">
                 <?php
                 if ( $arrow_type === 'image' ) {
-                    $src = esc_url( $opts['repeater_slider_next_image']['url'] ?? '' );
-                    printf( '<img src="%s" alt="" />', $src );
+                    printf( '<img src="%s" alt="" />', esc_url( $opts['repeater_slider_next_image']['url'] ?? '' ) );
                 } elseif ( $arrow_type === 'icon' ) {
                     \Elementor\Icons_Manager::render_icon( $opts['repeater_slider_next_icon'], [ 'aria-hidden' => 'true' ] );
                 }
@@ -724,7 +722,7 @@ class REPEFOEL_ACF_Repeater_Carousel extends REPEFOEL_Widget_Base {
         $navigation_type = sanitize_text_field( $settings['repeater_slider_navigation'] ?? 'none' );
         $this->configure_navigation( $settings_arr, $navigation_type, $slider_id );
 
-        return apply_filters( 'addoncraft_repeater_slider_settings', $settings_arr, $settings, $this->get_id() );
+        return apply_filters( 'repefoel_repeater_slider_settings', $settings_arr, $settings, $this->get_id() );
     }
 
     private function sanitize_slides_per_view( $value ) {

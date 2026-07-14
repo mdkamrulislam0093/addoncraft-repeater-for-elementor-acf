@@ -35,6 +35,7 @@ abstract class REPEFOEL_Widget_Base extends \Elementor\Widget_Base {
             'post_type'              => 'elementor_library',
             'posts_per_page'         => -1,
             'post_status'            => 'publish',
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Elementor itself stores the template type in postmeta; no taxonomy alternative exists.
             'meta_key'               => '_elementor_template_type',
             'meta_value'             => 'REPEFOEL_repeater',
             'fields'                 => 'ids',

@@ -403,6 +403,7 @@
                 method: 'POST',
                 data: {
                     action:         'repefoel_update_template_preview_settings',
+                    nonce:          REPEFOELTemplateData.nonce,
                     template_id:    template_id,
                     post_id:        post_id,
                     repeater_field: repeater_field,
@@ -614,6 +615,7 @@
                                   method: 'POST',
                                   data: {
                                     'action'         : 'repefoel_create_elementor_repeater_template',
+                                    'nonce'          : REPEFOELTemplateData.nonce,
                                     'post_id'        : current_post_id,
                                     'repeater_field' : repeaterFieldVal,
                                   },

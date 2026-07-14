@@ -1,9 +1,9 @@
 === Addoncraft Repeater For Elementor ACF ===
-Contributors: addoncraft
+Contributors: addoncraft, kamrulislam0093
 Donate link: https://addonscraft.com
 Tags: acf, elementor, repeater, loop, acf repeater elementor
 Requires at least: 5.8
-Tested up to: 6.9
+Tested up to: 7.0
 Stable tag: 2.4
 Requires PHP: 7.4
 License: GPLv3 or later
@@ -13,8 +13,9 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 
 == Description ==
-
 **Addoncraft Repeater for Elementor ACF** allows you to easily display **Advanced Custom Fields (ACF) Repeater fields inside Elementor**, including a dedicated Slider widget for carousel-style layouts.
+
+https://youtu.be/M0tt9ojma7Q
 
 Design your layout **once in Elementor**, connect it to your **ACF Repeater field**, and the plugin will automatically loop and render all repeater items—as a normal layout or slider—fully dynamically.
 
@@ -142,6 +143,16 @@ Yes. Content is rendered dynamically but remains fully crawlable by search engin
 
 
 == Changelog ==
+
+= 2.5 =
+* Security hardening: added nonce verification to admin-ajax handlers for template creation and preview settings
+* Fixed output escaping for slider navigation arrow images
+* Fixed unslashing of $_POST data before sanitization
+* Minor code quality and performance fixes (naming conventions, escaping)
+
+= 2.4 =
+* Easy UI loop template editing improvements in grid widget
+
 = 2.3.0 =
 * Minor Update
 
@@ -182,5 +193,6 @@ Yes. Content is rendered dynamically but remains fully crawlable by search engin
 
 == Upgrade Notice ==
 
-= 2.3 =
-* Minor Updates
+= 2.5 =
+* Security hardening for admin-ajax handlers. Recommended update.
+

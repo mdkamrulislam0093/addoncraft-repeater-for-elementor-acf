@@ -17,7 +17,7 @@ defined('ABSPATH') || exit;
 
 define('REPEFOEL__PLUGIN_PATH', trailingslashit(plugin_dir_path(__FILE__)));
 define('REPEFOEL__PLUGIN_URL', trailingslashit(plugins_url('/', __FILE__)));
-define('REPEFOEL__PLUGIN_VERSION', '2.0.1');
+define('REPEFOEL__PLUGIN_VERSION', '2.5');
 
 class REPEFOEL_ELEMENTOR_ADDON
 {
@@ -268,7 +268,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 
 		deactivate_plugins(plugin_basename(__FILE__));
 
-		if (isset($_GET['activate'])) {
+		if (isset($_GET['activate'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- value is only unset, never read or processed.
 			unset($_GET['activate']);
 		}
 
@@ -513,6 +513,8 @@ class REPEFOEL_ELEMENTOR_ADDON
 	public function repefoel_create_elementor_repeater_template()
 	{
 
+		check_ajax_referer('repefoel_nonce', 'nonce');
+
 		if (!current_user_can('edit_posts')) {
 			wp_die('Insufficient permissions');
 		}
@@ -555,7 +557,7 @@ class REPEFOEL_ELEMENTOR_ADDON
 		update_post_meta( $template_id, '_elementor_data', $elementor_data );
 
 		$initial_post_id       = absint( $_POST['post_id'] ?? 0 );
-		$initial_repeater_field = sanitize_text_field( $_POST['repeater_field'] ?? '' );
+		$initial_repeater_field = isset( $_POST['repeater_field'] ) ? sanitize_text_field( wp_unslash( $_POST['repeater_field'] ) ) : '';
 		update_post_meta( $template_id, '_elementor_page_settings', [
 			'REPEFOEL_preview_post'   => $initial_post_id,
 			'REPEFOEL_repeater_field' => $initial_repeater_field,
@@ -576,13 +578,15 @@ class REPEFOEL_ELEMENTOR_ADDON
 
 	public function repefoel_update_template_preview_settings()
 	{
+		check_ajax_referer('repefoel_nonce', 'nonce');
+
 		if ( ! current_user_can( 'edit_posts' ) ) {
 			wp_die( 'Insufficient permissions' );
 		}
 
 		$template_id    = absint( $_POST['template_id'] ?? 0 );
 		$post_id        = absint( $_POST['post_id'] ?? 0 );
-		$repeater_field = sanitize_text_field( $_POST['repeater_field'] ?? '' );
+		$repeater_field = isset( $_POST['repeater_field'] ) ? sanitize_text_field( wp_unslash( $_POST['repeater_field'] ) ) : '';
 
 		if ( ! $template_id ) {
 			wp_send_json_error( 'Invalid template ID' );
